@@ -22,16 +22,35 @@ import (
 // Writes a string as a sequence of bytes to be send to a Redis
 // instance, using the Redis Bulk format.
 func WriteBulk(bulk string) []byte {
-	var buffer bytes.Buffer
+	bulk_len := strconv.Itoa(len(bulk))
 
-	buffer.WriteByte('$')
-	buffer.WriteString(strconv.Itoa(len(bulk)))
-	buffer.WriteString("\r\n")
+	// '$' + len(string(len(bulk))) + "\r\n" + len(bulk) + "\r\n"
+	n := 1 + len(bulk_len) + 2 + len(bulk) + 2
 
-	buffer.WriteString(bulk)
-	buffer.WriteString("\r\n")
+	bytes := make([]byte, n)
 
-	return buffer.Bytes()
+	bytes[0] = '$'
+
+	j := 1
+
+	for _, c := range bulk_len {
+		bytes[j] = byte(c)
+		j++
+	}
+
+	bytes[j] = '\r'
+	bytes[j+1] = '\n'
+	j += 2
+
+	for _, c := range bulk {
+		bytes[j] = byte(c)
+		j++
+	}
+
+	bytes[j] = '\r'
+	bytes[j+1] = '\n'
+
+	return bytes
 }
 
 // Writes a sequence of strings as a sequence of bytes to be send to a
