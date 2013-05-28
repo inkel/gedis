@@ -6,15 +6,21 @@ import (
 	"strconv"
 )
 
-// Redis protocoal
+/*
+ Redis protocoal
 
-// *<num args> CR LF
-// $<num bytes arg1> CR LF
-// <arg data> CR LF
-// ...
-// $<num bytes argn> CR LF
-// <arg data>
+ Redis uses a very simple text protocol, which is binary safe.
 
+ *<num args> CR LF
+ $<num bytes arg1> CR LF
+ <arg data> CR LF
+ ...
+ $<num bytes argn> CR LF
+ <arg data>
+*/
+
+// Writes a string as a sequence of bytes to be send to a Redis
+// instance, using the Redis Bulk format.
 func WriteBulk(bulk string) []byte {
 	var buffer bytes.Buffer
 
@@ -28,6 +34,8 @@ func WriteBulk(bulk string) []byte {
 	return buffer.Bytes()
 }
 
+// Writes a sequence of strings as a sequence of bytes to be send to a
+// Redis instance, using the Redis Multi-Bulk format.
 func WriteMultiBulk(cmd string, args ...string) []byte {
 	var buffer bytes.Buffer
 
@@ -52,6 +60,7 @@ const (
 	MultiBulkReply = '*'
 )
 
+// Represents a response sent by a Redis server.
 type Response struct {
 	kind   byte
 	status string
@@ -64,38 +73,47 @@ type ResponseError struct {
 	kind, msg string
 }
 
+// Returns true if the response is a status response.
 func (r *Response) IsStatus() bool {
 	return r.kind == StatusReply
 }
 
+// Returns true if the response is an integer response.
 func (r *Response) IsInteger() bool {
 	return r.kind == IntegerReply
 }
 
+// Returns true if the response is a bulk response
 func (r *Response) IsBulk() bool {
 	return r.kind == BulkReply
 }
 
+// Returns true if the response is a multi-bulk response.
 func (r *Response) IsMultiBulk() bool {
 	return r.kind == MultiBulkReply
 }
 
+// Returns the status returned in a status response.
 func (r *Response) Status() string {
 	return string(r.value)
 }
 
+// Returns the Int64 in an integer response.
 func (r *Response) Integer() (int64, error) {
 	return strconv.ParseInt(string(r.value), 10, 64)
 }
 
+// Returns the raw value of the response.
 func (r *Response) Value() []byte {
 	return r.value
 }
 
+// Returns true if the bulk or multi-bulk response was nil.
 func (r *Response) IsNull() bool {
 	return r.null
 }
 
+// Returns the raw values in a multi-bulk response.
 func (r *Response) Values() [][]byte {
 	return r.values
 }
@@ -119,6 +137,7 @@ func readLine(data []byte, offset int64) ([]byte, int64) {
 	return buffer[:i], int64(offset + 2)
 }
 
+// Reads the first bulk response from a sequence of bytes.
 func ReadBulk(data []byte, offset int64) ([]byte, int64, error) {
 	var value []byte
 	var n_offset int64
@@ -144,6 +163,7 @@ func ReadBulk(data []byte, offset int64) ([]byte, int64, error) {
 	}
 }
 
+// Creates a new Response object from a sequence of bytes.
 func NewResponse(data []byte) (r Response, err error) {
 	r.kind = data[0]
 
