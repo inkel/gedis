@@ -168,7 +168,7 @@ func NewResponse(data []byte) (r Response, err error) {
 	r.kind = data[0]
 
 	switch r.kind {
-	case '+', ':', '-':
+	case StatusReply, IntegerReply, ErrorReply:
 		value, _ := readLine(data, 1)
 
 		if r.kind == '-' {
@@ -176,7 +176,7 @@ func NewResponse(data []byte) (r Response, err error) {
 		} else {
 			r.value = value
 		}
-	case '$':
+	case BulkReply:
 		r.value, _, err = ReadBulk(data, 0)
 
 		if len(r.value) == 0 {
@@ -186,7 +186,7 @@ func NewResponse(data []byte) (r Response, err error) {
 		if err != nil {
 			return
 		}
-	case '*':
+	case MultiBulkReply:
 		value, offset := readLine(data, 1)
 
 		num_values, err := strconv.ParseInt(string(value), 10, 64)
