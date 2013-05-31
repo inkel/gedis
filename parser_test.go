@@ -20,7 +20,14 @@ func assertParse(t *testing.T, input, output string) {
 		t.FailNow()
 	}
 
-	if !bytes.Equal(expected, data) {
+	got, ok := data.([]byte)
+
+	if !ok {
+		t.Errorf("%s:%d: Cannot convert to []byte: %#v", data)
+		t.FailNow()
+	}
+
+	if !bytes.Equal(expected, got) {
 		t.Errorf("%s:%d: Parse(%#v)\nreturned %#v\nexpected %#v", file, ln, []byte(input), data, expected)
 	}
 }

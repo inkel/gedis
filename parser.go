@@ -2,10 +2,10 @@ package gedis
 
 import (
 	"io"
-	"errors"
+	"fmt"
 )
 
-func Parse(r io.Reader) (bs []byte, err error) {
+func Parse(r io.Reader) (ret interface{}, err error) {
 	kind := make([]byte, 1)
 
 	_, err = r.Read(kind)
@@ -15,12 +15,17 @@ func Parse(r io.Reader) (bs []byte, err error) {
 
 	switch kind[0] {
 	case '+':
-		bs, err = readLine(r)
+		ret, err = readLine(r)
 	case '-':
-		bs, err = readLine(r)
+		ret, err = readLine(r)
+
 		if err == nil {
-			err = errors.New(string(bs))
-			bs = make([]byte, 1)
+			if bs, ok := ret.([]byte); ok {
+				err = fmt.Errorf(string(bs))
+			} else {
+				err = fmt.Errorf("Cannot convert to []byte: %#v\n", ret)
+			}
+			ret = nil
 		}
 	}
 
