@@ -27,6 +27,8 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 			}
 			ret = nil
 		}
+	case ':':
+		ret, err = readNumber(r)
 	}
 
 	return

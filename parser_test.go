@@ -59,3 +59,33 @@ func Test_Parse_Error(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func assertInteger(t *testing.T, input string, expected int) {
+	_, file, ln, _ := runtime.Caller(1)
+
+	reader := strings.NewReader(input)
+
+	ret, err := Parse(reader)
+
+	if err != nil {
+		t.Errorf("%s:%d: Parse(%#v) returned an error: %v", file, ln, []byte(input), err)
+		t.FailNow()
+	}
+
+	got, ok := ret.(int)
+
+	if !ok {
+		t.Errorf("%s:%d: Parse(%q): Couldn't convert to int: %#v", file, ln, input, ret)
+		t.FailNow()
+	}
+
+	if got != expected {
+		t.Errorf("%s:%d: Parse(%#v)\nreturned %#v\nexpected %#v", file, ln, []byte(input), got, expected)
+		t.FailNow()
+	}
+}
+
+func Test_Parse_Integer(t *testing.T) {
+	assertInteger(t, ":1234\r\n", 1234)
+	assertInteger(t, ":-1234\r\n", -1234)
+}
