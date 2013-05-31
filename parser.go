@@ -16,6 +16,15 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 	switch kind[0] {
 	case '+':
 		ret, err = readLine(r)
+		if err == nil {
+			if bs, ok := ret.([]byte); ok {
+				return string(bs), nil
+			} else {
+				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
+			}
+		} else {
+			return nil, err
+		}
 	case '-':
 		ret, err = readLine(r)
 
@@ -31,6 +40,15 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 		ret, err = readNumber(r)
 	case '$':
 		ret, err = ReadBulk(r)
+		if err == nil {
+			if bs, ok := ret.([]byte); ok {
+				return string(bs), nil
+			} else {
+				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	return

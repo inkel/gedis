@@ -2,33 +2,31 @@ package gedis
 
 import (
 	"testing"
-	"bytes"
 	"strings"
 	"runtime"
 )
 
-func assertString(t *testing.T, input, output string) {
+func assertString(t *testing.T, input, expected string) {
 	_, file, ln, _ := runtime.Caller(1)
 
 	reader := strings.NewReader(input)
-	expected := []byte(output)
 
 	data, err := Parse(reader)
 
 	if err != nil {
-		t.Errorf("%s:%d: Parse(%#v) returned an error: %v", file, ln, []byte(input), err)
+		t.Errorf("%s:%d: returned an error: %v", file, ln, err)
 		t.FailNow()
 	}
 
-	got, ok := data.([]byte)
+	got, ok := data.(string)
 
 	if !ok {
-		t.Errorf("%s:%d: Cannot convert to []byte: %#v", file, ln, data)
+		t.Errorf("%s:%d: Cannot convert to string: %#v", file, ln, data)
 		t.FailNow()
 	}
 
-	if !bytes.Equal(expected, got) {
-		t.Errorf("%s:%d: Parse(%#v)\nreturned %#v\nexpected %#v", file, ln, []byte(input), data, expected)
+	if got != expected {
+		t.Errorf("%s:%d:\nreturned %q\nexpected %q", file, ln, data, expected)
 	}
 }
 
