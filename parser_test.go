@@ -89,3 +89,8 @@ func Test_Parse_Integer(t *testing.T) {
 	assertInteger(t, ":1234\r\n", 1234)
 	assertInteger(t, ":-1234\r\n", -1234)
 }
+
+func Test_Parse_Bulk(t *testing.T) {
+	assertParse(t, "$5\r\nlorem\r\n", "lorem")
+	assertParse(t, "$12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
+}

@@ -29,6 +29,8 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 		}
 	case ':':
 		ret, err = readNumber(r)
+	case '$':
+		ret, err = ReadBulk(r)
 	}
 
 	return
