@@ -77,3 +77,27 @@ func readLine(r io.Reader) (bs []byte, err error) {
 
 	return bs[:l], err
 }
+
+func ReadBulk(r io.Reader) (bs []byte, err error) {
+	num_bytes, err := readNumber(r)
+	if err != nil {
+		return
+	}
+
+	if num_bytes == -1 {
+		return []byte{}, nil
+	}
+
+	bs = make([]byte, num_bytes)
+	b := make([]byte, 1)
+
+	for i := 0; i < num_bytes; i++ {
+		_, err = r.Read(b)
+		if err != nil {
+			return
+		}
+		bs[i] = b[0]
+	}
+
+	return
+}

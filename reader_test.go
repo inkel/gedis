@@ -81,3 +81,41 @@ func Benchmark_readLine(b *testing.B) {
 		readLine(line)
 	}
 }
+
+func pass_ReadBulk(t *testing.T, input, output string) {
+	_, file, ln, _ := runtime.Caller(1)
+
+	reader := strings.NewReader(input)
+	expected := []byte(output)
+
+	res, err := ReadBulk(reader)
+
+	if err != nil {
+		t.Errorf("%s:%d: ReadBulk() returned an error: %v", file, ln, err)
+		t.FailNow()
+	}
+
+	if !bytes.Equal(expected, res) {
+		t.Errorf("%s:%d: ReadBulk()\nreturned %#v\nexpected %#v", file, ln, res, expected)
+		t.FailNow()
+	}
+}
+
+func Test_ReadBulk(t *testing.T) {
+	pass_ReadBulk(t, "6\r\nlipsum\r\n", "lipsum")
+	pass_ReadBulk(t, "-1\r\n", "")
+	pass_ReadBulk(t, "12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
+
+	if res, err := ReadBulk(strings.NewReader("PONG")); err == nil {
+		t.Errorf("ReadBulk() should've returned an error, returned: %#v", res)
+	}
+}
+
+func Benchmark_ReadBulk(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		reader := strings.NewReader("12\r\nlorem\r\nipsum\r\n")
+		b.StartTimer()
+		ReadBulk(reader)
+	}
+}
