@@ -39,9 +39,10 @@ Note that running the benchmarks **will** run the tests beforehand.
 
 * Documentation
 * Tests
-  * `\r\n` in a reply
-  * Null elements in Multi-Bulk replies
+  * ~~`\r\n` in a reply~~
+  * ~~Null elements in Multi-Bulk replies~~
+  * ~~Multi-Bulk inside Multi-Bulk replies~~
 * Network
 * Socket
 * Pipeline
-* Improve Bulk/Multi-Bulk `nil`
+* ~~Improve Bulk/Multi-Bulk `nil`~~
