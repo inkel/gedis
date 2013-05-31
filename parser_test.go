@@ -38,3 +38,17 @@ func Benchmark_Parse_Status(b *testing.B) {
 		Parse(reader)
 	}
 }
+
+func Test_Parse_Error(t *testing.T) {
+	_, err := Parse(strings.NewReader("-ERR unknown\r\n"))
+
+	if err == nil {
+		t.Errorf("Parsing an error reply didn't return an error")
+		t.FailNow()
+	}
+
+	if err.Error() != "ERR unknown" {
+		t.Errorf("Unexpected error: %v", err)
+		t.FailNow()
+	}
+}
