@@ -1,8 +1,8 @@
 package gedis
 
 import (
-	"io"
 	"fmt"
+	"io"
 )
 
 func Parse(r io.Reader) (ret interface{}, err error) {
@@ -49,6 +49,28 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 		} else {
 			return nil, err
 		}
+	case '*':
+		n, err := readNumber(r)
+		if err != nil {
+			return nil, err
+		}
+
+		if n == -1 {
+			return nil, nil
+		}
+
+		res := make([]interface{}, n)
+
+		for i := 0; i < n; i++ {
+			ret, err := Parse(r)
+			if err == nil {
+				res[i] = ret
+			} else {
+				res[i] = err
+			}
+		}
+
+		ret = res
 	}
 
 	return
