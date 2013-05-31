@@ -23,7 +23,7 @@ func assertParse(t *testing.T, input, output string) {
 	got, ok := data.([]byte)
 
 	if !ok {
-		t.Errorf("%s:%d: Cannot convert to []byte: %#v", data)
+		t.Errorf("%s:%d: Cannot convert to []byte: %#v", file, ln, data)
 		t.FailNow()
 	}
 
