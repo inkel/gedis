@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-func assertParse(t *testing.T, input, output string) {
+func assertString(t *testing.T, input, output string) {
 	_, file, ln, _ := runtime.Caller(1)
 
 	reader := strings.NewReader(input)
@@ -33,8 +33,8 @@ func assertParse(t *testing.T, input, output string) {
 }
 
 func Test_Parse_Status(t *testing.T) {
-	assertParse(t, "+OK\r\n", "OK")
-	assertParse(t, "+PING\r\n", "PING")
+	assertString(t, "+OK\r\n", "OK")
+	assertString(t, "+PING\r\n", "PING")
 }
 
 func Benchmark_Parse_Status(b *testing.B) {
@@ -91,6 +91,6 @@ func Test_Parse_Integer(t *testing.T) {
 }
 
 func Test_Parse_Bulk(t *testing.T) {
-	assertParse(t, "$5\r\nlorem\r\n", "lorem")
-	assertParse(t, "$12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
+	assertString(t, "$5\r\nlorem\r\n", "lorem")
+	assertString(t, "$12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
 }
