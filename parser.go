@@ -32,7 +32,7 @@ func Parse(r io.Reader) (ret interface{}, err error) {
 			if bs, ok := ret.([]byte); ok {
 				err = fmt.Errorf(string(bs))
 			} else {
-				err = fmt.Errorf("Cannot convert to []byte: %#v\n", ret)
+				err = fmt.Errorf("Cannot convert to []byte: %#v", ret)
 			}
 			ret = nil
 		}
