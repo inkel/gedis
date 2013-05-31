@@ -4,6 +4,7 @@ import (
 	"testing"
 	"strings"
 	"runtime"
+	"bytes"
 )
 
 func pass_readNumber(t *testing.T, line string, expected int) {
@@ -44,5 +45,39 @@ func Benchmark_readNumber(b *testing.B) {
 		line := strings.NewReader("1234\r\n")
 		b.StartTimer()
 		readNumber(line)
+	}
+}
+
+func pass_readLine(t *testing.T, line string) {
+	_, file, ln, _ := runtime.Caller(1)
+
+	expected := []byte(line)
+	input := []byte(line + "\r\n")
+	reader := strings.NewReader(string(input))
+
+	res, err := readLine(reader)
+
+	if err != nil {
+		t.Errorf("%s:%d: readLine() returned an error: %v", file, ln, err)
+		t.FailNow()
+	}
+
+	if !bytes.Equal(expected, res) {
+		t.Errorf("%s:%d: readLine()\nreturned %#v\nexpected %#v", file, ln, res, expected)
+		t.FailNow()
+	}
+}
+
+func Test_readLine(t *testing.T) {
+	pass_readLine(t, "Lorem ipsum dolor sit amet")
+	pass_readLine(t, "Lorem\ripsum")
+}
+
+func Benchmark_readLine(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		line := strings.NewReader("Lorem ipsum\rdolor sit amet\r\n")
+		b.StartTimer()
+		readLine(line)
 	}
 }
