@@ -99,5 +99,9 @@ func ReadBulk(r io.Reader) (bs []byte, err error) {
 		bs[i] = b[0]
 	}
 
+	// Must read following two bytes for \r\n
+	crlf := make([]byte, 2)
+	r.Read(crlf)
+
 	return
 }
