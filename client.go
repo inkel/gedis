@@ -30,5 +30,12 @@ func (c *Client) Send(args ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	return c.Read()
+}
+
+// Reads from the client
+//
+// This is useful for cases like a monitor
+func (c *Client) Read() (interface{}, error) {
 	return Read(c.conn)
 }
