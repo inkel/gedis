@@ -9,18 +9,20 @@ func Test_readNumber(t *testing.T) {
 	var n int
 	var err error
 
+	a := Asserter{t, 1}
+
 	n, err = readNumber(strings.NewReader("1234\r\n"))
-	assertNil(t, 1, err)
-	assertIntegerEq(t, 1, 1234, n)
+	a.Nil(err)
+	a.IntegerEq(1234, n)
 
 	n, err = readNumber(strings.NewReader("-1234\r\n"))
-	assertNil(t, 1, err)
-	assertIntegerEq(t, 1, -1234, n)
+	a.Nil(err)
+	a.IntegerEq(-1234, n)
 
 	_, err = readNumber(strings.NewReader("abc\r\n"))
-	assertNotNil(t, 1, err)
+	a.NotNil(err)
 	_, err = readNumber(strings.NewReader("12ab34\r\n"))
-	assertNotNil(t, 1, err)
+	a.NotNil(err)
 }
 
 func Benchmark_readNumber(b *testing.B) {
@@ -32,24 +34,24 @@ func Benchmark_readNumber(b *testing.B) {
 	}
 }
 
-func pass_readLine(t *testing.T, expected string) {
-	input := []byte(expected + "\r\n")
-	reader := strings.NewReader(string(input))
-
-	res, err := readLine(reader)
-
-	assertNil(t, 2, err)
-	assertStringEq(t, 2, expected, res)
-}
-
 func Test_readLine(t *testing.T) {
-	pass_readLine(t, "Lorem ipsum dolor sit amet")
-	pass_readLine(t, "Lorem\ripsum")
+	var res string
+	var err error
 
-	res, err := readLine(strings.NewReader("Lorem ipsum\r\ndolor sit amet"))
+	a := Asserter{t, 1}
 
-	assertNil(t, 2, err)
-	assertStringEq(t, 2, "Lorem ipsum", res)
+	res, err = readLine(strings.NewReader("Lorem ipsum\r\n"))
+	a.Nil(err)
+	a.StringEq("Lorem ipsum", res)
+
+	res, err = readLine(strings.NewReader("Lorem\ripsum\ndolor\r\n"))
+	a.Nil(err)
+	a.StringEq("Lorem\ripsum\ndolor", res)
+
+	res, err = readLine(strings.NewReader("Lorem ipsum\r\ndolor sit amet"))
+
+	a.Nil(err)
+	a.StringEq("Lorem ipsum", res)
 }
 
 func Benchmark_readLine(b *testing.B) {
@@ -62,21 +64,23 @@ func Benchmark_readLine(b *testing.B) {
 }
 
 func Test_readBulk(t *testing.T) {
+	a := Asserter{t, 1}
+
 	res, err := readBulk(strings.NewReader("6\r\nlipsum\r\n"))
-	assertNil(t, 1, err)
-	assertStringEq(t, 1, "lipsum", res)
+	a.Nil(err)
+	a.StringEq("lipsum", res)
 
 	res, err = readBulk(strings.NewReader("-1\r\n"))
-	assertNil(t, 1, err)
-	assertNil(t, 1, res)
+	a.Nil(err)
+	a.Nil(res)
 
 	res, err = readBulk(strings.NewReader("12\r\nlorem\r\nipsum\r\n"))
-	assertNil(t, 1, err)
-	assertStringEq(t, 1, "lorem\r\nipsum", res)
+	a.Nil(err)
+	a.StringEq("lorem\r\nipsum", res)
 
 	res, err = readBulk(strings.NewReader("PONG"))
-	assertNotNil(t, 1, err)
-	assertNil(t, 1, res)
+	a.NotNil(err)
+	a.Nil(res)
 }
 
 func Benchmark_readBulk(b *testing.B) {
@@ -89,58 +93,68 @@ func Benchmark_readBulk(b *testing.B) {
 }
 
 func TestRead_status(t *testing.T) {
+	a := Asserter{t, 1}
+
 	res, err := Read(strings.NewReader("+OK\r\n"))
-	assertNil(t, 1, err)
-	assertStringEq(t, 1, "OK", res)
+	a.Nil(err)
+	a.StringEq("OK", res)
 }
 
 func TestRead_error(t *testing.T) {
+	a := Asserter{t, 1}
+
 	res, err := Read(strings.NewReader("-ERR unknown\r\n"))
-	assertNotNil(t, 1, err)
-	assertNil(t, 1, res)
+	a.NotNil(err)
+	a.Nil(res)
 }
 
 func TestRead_integer(t *testing.T) {
+	a := Asserter{t, 1}
+
 	res, err := Read(strings.NewReader(":1234\r\n"))
-	assertNil(t, 1, err)
-	assertIntegerEq(t, 1, 1234, res)
+	a.Nil(err)
+	a.IntegerEq(1234, res)
 
 	res, err = Read(strings.NewReader(":-1234\r\n"))
-	assertNil(t, 1, err)
-	assertIntegerEq(t, 1, -1234, res)
+	a.Nil(err)
+	a.IntegerEq(-1234, res)
 
 	_, err = Read(strings.NewReader(":lorem\r\n"))
-	assertNotNil(t, 1, err)
+	a.NotNil(err)
 }
 
 func TestRead_bulk(t *testing.T) {
 	var res interface{}
 	var err error
 
+	a := Asserter{t, 1}
+
 	res, err = Read(strings.NewReader("$5\r\nlorem\r\n"))
-	assertNil(t, 1, err)
-	assertStringEq(t, 1, "lorem", res)
+	a.Nil(err)
+	a.StringEq("lorem", res)
 
 	res, err = Read(strings.NewReader("$12\r\nlorem\r\nipsum\r\n"))
-	assertNil(t, 1, err)
-	assertStringEq(t, 1, "lorem\r\nipsum", res)
+	a.Nil(err)
+	a.StringEq("lorem\r\nipsum", res)
 
 	res, err = Read(strings.NewReader("MUST FAIL"))
-	assertNotNil(t, 1, err)
-	assertNil(t, 1, res)
+	a.NotNil(err)
+	a.Nil(res)
 
 	res, err = Read(strings.NewReader("$-1\r\n"))
-	assertNil(t, 1, err)
-	assertNil(t, 1, res)
+	a.Nil(err)
+	a.Nil(res)
 }
 
 func TestRead_multiBulk(t *testing.T) {
+	a := Asserter{t, 1}
+
 	input := "*4\r\n$5\r\nlorem\r\n$-1\r\n*2\r\n$5\r\nipsum\r\n$5\r\ndolor\r\n:-1234\r\n"
 	reader := strings.NewReader(input)
 
 	res, err := Read(reader)
 
-	assertNil(t, 1, err)
+	a.Nil(err)
 
 	data, ok := res.([]interface{})
 
@@ -149,17 +163,17 @@ func TestRead_multiBulk(t *testing.T) {
 		t.FailNow()
 	}
 
-	assertStringEq(t, 1, "lorem", data[0])
+	a.StringEq("lorem", data[0])
 
-	assertNil(t, 1, data[1])
+	a.Nil(data[1])
 
 	if bulks, ok := data[2].([]interface{}); ok {
-		assertStringEq(t, 1, "ipsum", bulks[0])
-		assertStringEq(t, 1, "dolor", bulks[1])
+		a.StringEq("ipsum", bulks[0])
+		a.StringEq("dolor", bulks[1])
 	} else {
 		t.Errorf("can't convert to []interface{}: %#v", data[2])
 		t.FailNow()
 	}
 
-	assertIntegerEq(t, 1, -1234, data[3])
+	a.IntegerEq(-1234, data[3])
 }
