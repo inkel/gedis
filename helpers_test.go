@@ -38,6 +38,7 @@ func assertIntegerEq(t *testing.T, skip int, expected int, actual interface{}) {
 
 func assertNotError(t *testing.T, skip int, err error) {
 	if err != nil {
-		e(t, skip, "assertNotError(): Returned unexpected error: %v", err)
+		e(t, skip, "assertNotError(): unexpected error: %v", err)
+		t.FailNow()
 	}
 }
