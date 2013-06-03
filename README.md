@@ -202,6 +202,41 @@ Note that running the benchmarks **will** run the tests beforehand.
 * Pipeline
 * ~~Improve Bulk/Multi-Bulk `nil`~~
 
+## Real-world example
+
+Here we will implement a simple MONITOR that mimicks the command `redis-cli MONITOR`:
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/inkel/gedis"
+)
+
+func main() {
+	c, err := gedis.Dial("tcp", ":6379")
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := c.Send("MONITOR")
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		fmt.Println(res)
+		res, err = c.Read()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+```
+
+As you can see, using `gedis` is very simple!
+
 ## Why
 
 I wanted to learn Go, so I decided to write a minimal Redis client.
