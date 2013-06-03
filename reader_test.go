@@ -1,26 +1,15 @@
 package gedis
 
 import (
-	"testing"
-	"strings"
 	"runtime"
-	"bytes"
+	"strings"
+	"testing"
 )
 
 func pass_readNumber(t *testing.T, line string, expected int) {
-	_, file, ln, _ := runtime.Caller(1)
-
 	n, err := readNumber(strings.NewReader(line))
-
-	if err != nil {
-		t.Logf("%s:%d: readNumber(%q) returned an error: %#v", file, ln, line, err)
-		t.FailNow()
-	}
-
-	if n != expected {
-		t.Logf("%s:%d: readNumber(%q) returned %d, expected %d", file, ln, line, n, expected)
-		t.FailNow()
-	}
+	assertNotError(t, 2, err)
+	assertIntegerEq(t, 2, expected, n)
 }
 
 func fail_readNumber(t *testing.T, line string) {
@@ -48,29 +37,24 @@ func Benchmark_readNumber(b *testing.B) {
 	}
 }
 
-func pass_readLine(t *testing.T, line string) {
-	_, file, ln, _ := runtime.Caller(1)
-
-	expected := []byte(line)
-	input := []byte(line + "\r\n")
+func pass_readLine(t *testing.T, expected string) {
+	input := []byte(expected + "\r\n")
 	reader := strings.NewReader(string(input))
 
 	res, err := readLine(reader)
 
-	if err != nil {
-		t.Errorf("%s:%d: readLine() returned an error: %v", file, ln, err)
-		t.FailNow()
-	}
-
-	if !bytes.Equal(expected, res) {
-		t.Errorf("%s:%d: readLine()\nreturned %#v\nexpected %#v", file, ln, res, expected)
-		t.FailNow()
-	}
+	assertNotError(t, 2, err)
+	assertStringEq(t, 2, expected, res)
 }
 
 func Test_readLine(t *testing.T) {
 	pass_readLine(t, "Lorem ipsum dolor sit amet")
 	pass_readLine(t, "Lorem\ripsum")
+
+	res, err := readLine(strings.NewReader("Lorem ipsum\r\ndolor sit amet"))
+
+	assertNotError(t, 2, err)
+	assertStringEq(t, 2, "Lorem ipsum", res)
 }
 
 func Benchmark_readLine(b *testing.B) {
@@ -82,40 +66,120 @@ func Benchmark_readLine(b *testing.B) {
 	}
 }
 
-func pass_ReadBulk(t *testing.T, input, output string) {
-	_, file, ln, _ := runtime.Caller(1)
+func Test_readBulk(t *testing.T) {
+	res, err := readBulk(strings.NewReader("6\r\nlipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lipsum", res)
 
-	reader := strings.NewReader(input)
-	expected := []byte(output)
+	res, err = readBulk(strings.NewReader("-1\r\n"))
+	assertNotError(t, 1, err)
 
-	res, err := ReadBulk(reader)
-
-	if err != nil {
-		t.Errorf("%s:%d: ReadBulk() returned an error: %v", file, ln, err)
+	if res != nil {
+		t.Errorf("Expected nil, returned %#v", res)
 		t.FailNow()
 	}
 
-	if !bytes.Equal(expected, res) {
-		t.Errorf("%s:%d: ReadBulk()\nreturned %#v\nexpected %#v", file, ln, res, expected)
-		t.FailNow()
+	res, err = readBulk(strings.NewReader("12\r\nlorem\r\nipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem\r\nipsum", res)
+
+	if res, err := readBulk(strings.NewReader("PONG")); err == nil {
+		t.Errorf("readBulk() should've returned an error, returned: %#v", res)
 	}
 }
 
-func Test_ReadBulk(t *testing.T) {
-	pass_ReadBulk(t, "6\r\nlipsum\r\n", "lipsum")
-	pass_ReadBulk(t, "-1\r\n", "")
-	pass_ReadBulk(t, "12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
-
-	if res, err := ReadBulk(strings.NewReader("PONG")); err == nil {
-		t.Errorf("ReadBulk() should've returned an error, returned: %#v", res)
-	}
-}
-
-func Benchmark_ReadBulk(b *testing.B) {
+func Benchmark_readBulk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		reader := strings.NewReader("12\r\nlorem\r\nipsum\r\n")
 		b.StartTimer()
-		ReadBulk(reader)
+		readBulk(reader)
 	}
+}
+
+func TestRead_status(t *testing.T) {
+	res, err := Read(strings.NewReader("+OK\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "OK", res)
+}
+
+func TestRead_error(t *testing.T) {
+	res, err := Read(strings.NewReader("-ERR unknown\r\n"))
+
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+	}
+}
+
+func TestRead_integer(t *testing.T) {
+	res, err := Read(strings.NewReader(":1234\r\n"))
+	assertNotError(t, 1, err)
+	assertIntegerEq(t, 1, 1234, res)
+
+	res, err = Read(strings.NewReader(":-1234\r\n"))
+	assertNotError(t, 1, err)
+	assertIntegerEq(t, 1, -1234, res)
+
+	res, err = Read(strings.NewReader(":lorem\r\n"))
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+	}
+}
+
+func TestRead_bulk(t *testing.T) {
+	var res interface{}
+	var err error
+
+	res, err = Read(strings.NewReader("$5\r\nlorem\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem", res)
+
+	res, err = Read(strings.NewReader("$12\r\nlorem\r\nipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem\r\nipsum", res)
+
+	res, err = Read(strings.NewReader("MUST FAIL"))
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+		t.FailNow()
+	}
+
+	res, err = Read(strings.NewReader("$-1\r\n"))
+	assertNotError(t, 1, err)
+	if res != nil {
+		t.Errorf("nil expected, returned: %#v", res)
+	}
+}
+
+func TestRead_multiBulk(t *testing.T) {
+	input := "*4\r\n$5\r\nlorem\r\n$-1\r\n*2\r\n$5\r\nipsum\r\n$5\r\ndolor\r\n:-1234\r\n"
+	reader := strings.NewReader(input)
+
+	res, err := Read(reader)
+
+	assertNotError(t, 1, err)
+
+	data, ok := res.([]interface{})
+
+	if !ok {
+		t.Errorf("Read() can't convert multi-bulk to []interface{}: %#v", res)
+		t.FailNow()
+	}
+
+	assertStringEq(t, 1, "lorem", data[0])
+
+	if data[1] != nil {
+		t.Errorf("nil expected, got: %#v", data[1])
+		t.FailNow()
+	}
+
+	if bulks, ok := data[2].([]interface{}); ok {
+		assertStringEq(t, 1, "ipsum", bulks[0])
+		assertStringEq(t, 1, "dolor", bulks[1])
+	} else {
+		t.Errorf("can't convert to []interface{}: %#v", data[2])
+		t.FailNow()
+	}
+
+	assertIntegerEq(t, 1, -1234, data[3])
 }

@@ -18,9 +18,18 @@ import (
  <arg data>
 */
 
+// Interface for writing Redis commands
+type Writer interface {
+	Write(p []byte) (n int, err error)
+}
+
+func Write(w Writer, cmd string, args ...string) (n int, err error) {
+	return w.Write(writeMultiBulk(cmd, args...))
+}
+
 // Writes a string as a sequence of bytes to be send to a Redis
 // instance, using the Redis Bulk format.
-func WriteBulk(bulk string) []byte {
+func writeBulk(bulk string) []byte {
 	bulk_len := strconv.Itoa(len(bulk))
 
 	// '$' + len(string(len(bulk))) + "\r\n" + len(bulk) + "\r\n"
@@ -54,17 +63,17 @@ func WriteBulk(bulk string) []byte {
 
 // Writes a sequence of strings as a sequence of bytes to be send to a
 // Redis instance, using the Redis Multi-Bulk format.
-func WriteMultiBulk(cmd string, args ...string) []byte {
+func writeMultiBulk(cmd string, args ...string) []byte {
 	var buffer bytes.Buffer
 
 	buffer.WriteByte('*')
 	buffer.WriteString(strconv.Itoa(1 + len(args)))
 	buffer.WriteString("\r\n")
 
-	buffer.Write(WriteBulk(cmd))
+	buffer.Write(writeBulk(cmd))
 
 	for _, elem := range args {
-		buffer.Write(WriteBulk(elem))
+		buffer.Write(writeBulk(elem))
 	}
 
 	return buffer.Bytes()
