@@ -184,6 +184,8 @@ func Read(r Reader) (ret interface{}, err error) {
 		}
 
 		ret = res
+	default:
+		return nil, fmt.Errorf("Unexpected character %#v", kind[0])
 	}
 
 	return
