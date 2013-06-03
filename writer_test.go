@@ -5,40 +5,40 @@ import (
 	"testing"
 )
 
-func Test_WriteBulk(t *testing.T) {
+func Test_writeBulk(t *testing.T) {
 	expected := []byte("$4\r\nPING\r\n")
-	parsed := WriteBulk("PING")
+	parsed := writeBulk("PING")
 
 	if !bytes.Equal(expected, parsed) {
-		t.Errorf("WriteBulk(%#v)\nG: %v\nE: %v", "PING", parsed, expected)
+		t.Errorf("writeBulk(%#v)\nG: %v\nE: %v", "PING", parsed, expected)
 	}
 }
 
-func Benchmark_WriteBulk(b *testing.B) {
+func Benchmark_writeBulk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		WriteBulk("PING")
+		writeBulk("PING")
 	}
 }
 
-func Test_WriteMultiBulk(t *testing.T) {
+func Test_writeMultiBulk(t *testing.T) {
 	cmd := "*1\r\n$4\r\nPING\r\n"
 	expected := []byte(cmd)
 
-	if parsed := WriteMultiBulk("PING"); !bytes.Equal(expected, parsed) {
-		t.Errorf("WriteMultiBulk(%#v)\nG: %v\nE: %v", cmd, parsed, expected)
+	if parsed := writeMultiBulk("PING"); !bytes.Equal(expected, parsed) {
+		t.Errorf("writeMultiBulk(%#v)\nG: %v\nE: %v", cmd, parsed, expected)
 	}
 
 	cmd = "*3\r\n$3\r\nSET\r\n$5\r\nlorem\r\n$5\r\n12345\r\n"
 	expected = []byte(cmd)
 
-	if parsed := WriteMultiBulk("SET", "lorem", "12345"); !bytes.Equal(expected, parsed) {
-		t.Errorf("WriteMultiBulk(%#v)\nG: %v\nE: %v", cmd, parsed, expected)
+	if parsed := writeMultiBulk("SET", "lorem", "12345"); !bytes.Equal(expected, parsed) {
+		t.Errorf("writeMultiBulk(%#v)\nG: %v\nE: %v", cmd, parsed, expected)
 	}
 }
 
-func Benchmark_WriteMultiBulk(b *testing.B) {
+func Benchmark_writeMultiBulk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		WriteMultiBulk("SET", "lorem", "12345")
+		writeMultiBulk("SET", "lorem", "12345")
 	}
 }
 
