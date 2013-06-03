@@ -48,29 +48,24 @@ func Benchmark_readNumber(b *testing.B) {
 	}
 }
 
-func pass_readLine(t *testing.T, line string) {
-	_, file, ln, _ := runtime.Caller(1)
-
-	expected := []byte(line)
-	input := []byte(line + "\r\n")
+func pass_readLine(t *testing.T, expected string) {
+	input := []byte(expected + "\r\n")
 	reader := strings.NewReader(string(input))
 
 	res, err := readLine(reader)
 
-	if err != nil {
-		t.Errorf("%s:%d: readLine() returned an error: %v", file, ln, err)
-		t.FailNow()
-	}
-
-	if !bytes.Equal(expected, res) {
-		t.Errorf("%s:%d: readLine()\nreturned %#v\nexpected %#v", file, ln, res, expected)
-		t.FailNow()
-	}
+	assertNotError(t, 2, err)
+	assertStringEq(t, 2, expected, res)
 }
 
 func Test_readLine(t *testing.T) {
 	pass_readLine(t, "Lorem ipsum dolor sit amet")
 	pass_readLine(t, "Lorem\ripsum")
+
+	res, err := readLine(strings.NewReader("Lorem ipsum\r\ndolor sit amet"))
+
+	assertNotError(t, 2, err)
+	assertStringEq(t, 2, "Lorem ipsum", res)
 }
 
 func Benchmark_readLine(b *testing.B) {

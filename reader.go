@@ -49,8 +49,8 @@ func readNumber(r io.Reader) (n int, err error) {
 	return sign * n, nil
 }
 
-func readLine(r io.Reader) (bs []byte, err error) {
-	bs = make([]byte, 1024)
+func readLine(r io.Reader) (line string, err error) {
+	bs := make([]byte, 1024)
 	l := 0
 
 	b := make([]byte, 1)
@@ -62,11 +62,11 @@ func readLine(r io.Reader) (bs []byte, err error) {
 			err = nil
 			break
 		} else if err != nil {
-			return []byte{}, err
+			return "", err
 		} else if b[0] == '\r' {
 			_, err = r.Read(b)
 			if err != nil {
-				return []byte{}, err
+				return "", err
 			}
 			if b[0] == '\n' {
 				break
@@ -80,7 +80,9 @@ func readLine(r io.Reader) (bs []byte, err error) {
 		l++
 	}
 
-	return bs[:l], err
+	line = string(bs[:l])
+
+	return line, err
 }
 
 func readBulk(r Reader) (bs []byte, err error) {
