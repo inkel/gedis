@@ -85,14 +85,16 @@ func readLine(r io.Reader) (line string, err error) {
 	return line, err
 }
 
-func readBulk(r Reader) (bs []byte, err error) {
+func readBulk(r Reader) (interface{}, error) {
+	var bs []byte
+
 	num_bytes, err := readNumber(r)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	if num_bytes == -1 {
-		return []byte{}, nil
+		return nil, nil
 	}
 
 	bs = make([]byte, num_bytes)
@@ -101,7 +103,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 	for i := 0; i < num_bytes; i++ {
 		_, err = r.Read(b)
 		if err != nil {
-			return
+			return nil, err
 		}
 		bs[i] = b[0]
 	}
@@ -110,7 +112,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 	crlf := make([]byte, 2)
 	r.Read(crlf)
 
-	return
+	return string(bs), nil
 }
 
 func Read(r Reader) (ret interface{}, err error) {

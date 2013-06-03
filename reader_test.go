@@ -1,10 +1,9 @@
 package gedis
 
 import (
-	"testing"
-	"strings"
 	"runtime"
-	"bytes"
+	"strings"
+	"testing"
 )
 
 func pass_readNumber(t *testing.T, line string, expected int) {
@@ -67,29 +66,22 @@ func Benchmark_readLine(b *testing.B) {
 	}
 }
 
-func pass_readBulk(t *testing.T, input, output string) {
-	_, file, ln, _ := runtime.Caller(1)
-
-	reader := strings.NewReader(input)
-	expected := []byte(output)
-
-	res, err := readBulk(reader)
-
-	if err != nil {
-		t.Errorf("%s:%d: readBulk() returned an error: %v", file, ln, err)
-		t.FailNow()
-	}
-
-	if !bytes.Equal(expected, res) {
-		t.Errorf("%s:%d: readBulk()\nreturned %#v\nexpected %#v", file, ln, res, expected)
-		t.FailNow()
-	}
-}
-
 func Test_readBulk(t *testing.T) {
-	pass_readBulk(t, "6\r\nlipsum\r\n", "lipsum")
-	pass_readBulk(t, "-1\r\n", "")
-	pass_readBulk(t, "12\r\nlorem\r\nipsum\r\n", "lorem\r\nipsum")
+	res, err := readBulk(strings.NewReader("6\r\nlipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lipsum", res)
+
+	res, err = readBulk(strings.NewReader("-1\r\n"))
+	assertNotError(t, 1, err)
+
+	if res != nil {
+		t.Errorf("Expected nil, returned %#v", res)
+		t.FailNow()
+	}
+
+	res, err = readBulk(strings.NewReader("12\r\nlorem\r\nipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem\r\nipsum", res)
 
 	if res, err := readBulk(strings.NewReader("PONG")); err == nil {
 		t.Errorf("readBulk() should've returned an error, returned: %#v", res)
