@@ -5,19 +5,6 @@ import (
 	"strconv"
 )
 
-/*
- Redis protocoal
-
- Redis uses a very simple text protocol, which is binary safe.
-
- *<num args> CR LF
- $<num bytes arg1> CR LF
- <arg data> CR LF
- ...
- $<num bytes argn> CR LF
- <arg data>
-*/
-
 // Interface for writing Redis commands
 type Writer interface {
 	Write(p []byte) (n int, err error)
