@@ -78,13 +78,13 @@ func writeMultiBulk(args ...interface{}) []byte {
 	for _, arg := range args {
 		bs = []byte{}
 
-		switch arg.(type) {
+		switch arg := arg.(type) {
 		case string:
-			bs = writeBulk(arg.(string))
+			bs = writeBulk(arg)
 		case int:
-			bs = writeInt(arg.(int))
+			bs = writeInt(arg)
 		case error:
-			bs = writeError(arg.(error))
+			bs = writeError(arg)
 		case nil:
 			bs = []byte("$-1\r\n")
 		default:
