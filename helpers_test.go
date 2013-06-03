@@ -36,9 +36,16 @@ func assertIntegerEq(t *testing.T, skip int, expected int, actual interface{}) {
 	}
 }
 
-func assertNotError(t *testing.T, skip int, err error) {
-	if err != nil {
-		e(t, skip, "assertNotError(): unexpected error: %v", err)
+func assertNil(t *testing.T, skip int, val interface{}) {
+	if val != nil {
+		e(t, skip, "assertNil(): nil expected, got: %v", val)
+		t.FailNow()
+	}
+}
+
+func assertNotNil(t *testing.T, skip int, val interface{}) {
+	if val == nil {
+		e(t, skip, "got nil when non-nil was expected")
 		t.FailNow()
 	}
 }
