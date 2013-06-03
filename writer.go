@@ -18,6 +18,15 @@ import (
  <arg data>
 */
 
+// Interface for writing Redis commands
+type Writer interface {
+	Write(p []byte) (n int, err error)
+}
+
+func Write(w Writer, cmd string, args ...string) (n int, err error) {
+	return w.Write(WriteMultiBulk(cmd, args...))
+}
+
 // Writes a string as a sequence of bytes to be send to a Redis
 // instance, using the Redis Bulk format.
 func WriteBulk(bulk string) []byte {

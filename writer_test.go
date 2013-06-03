@@ -41,3 +41,15 @@ func Benchmark_WriteMultiBulk(b *testing.B) {
 		WriteMultiBulk("SET", "lorem", "12345")
 	}
 }
+
+func TestWrite(t *testing.T) {
+	var writer bytes.Buffer
+
+	expected := "*1\r\n$4\r\nPING\r\n"
+
+	Write(&writer, "PING")
+
+	if res := writer.String(); expected != res {
+		t.Errorf("Write()\nexpected %q\nreturned %q", expected, res)
+	}
+}
