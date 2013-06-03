@@ -5,6 +5,11 @@ import (
 	"io"
 )
 
+// Interface for reading Redis replies
+type Reader interface {
+	Read(b []byte) (n int, err error)
+}
+
 func readNumber(r io.Reader) (n int, err error) {
 	b := make([]byte, 1)
 
