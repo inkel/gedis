@@ -127,8 +127,8 @@ func Read(r Reader) (ret interface{}, err error) {
 	case '+':
 		ret, err = readLine(r)
 		if err == nil {
-			if bs, ok := ret.([]byte); ok {
-				return string(bs), nil
+			if bs, ok := ret.(string); ok {
+				return bs, nil
 			} else {
 				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
 			}
