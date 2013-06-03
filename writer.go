@@ -53,6 +53,11 @@ func writeInt(n int) []byte {
 	return []byte(":" + strconv.Itoa(n) + "\r\n")
 }
 
+// Writes an error in the Redis protocol format
+func writeError(err error) []byte {
+	return []byte("-" + err.Error() + "\r\n")
+}
+
 // Writes a sequence of strings as a sequence of bytes to be send to a
 // Redis instance, using the Redis Multi-Bulk format.
 func writeMultiBulk(cmd string, args ...string) []byte {

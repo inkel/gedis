@@ -2,6 +2,7 @@ package gedis
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 )
 
@@ -57,6 +58,16 @@ func Test_writeInt(t *testing.T) {
 	if !bytes.Equal(expected, parsed) {
 		t.Errorf("\nexpected %#v\nreturned %#v", expected, parsed)
 		t.FailNow()
+	}
+}
+
+func Test_writeError(t *testing.T) {
+	err := errors.New("ERR unknown")
+	expected := []byte("-ERR unknown\r\n")
+	parsed := writeError(err)
+
+	if !bytes.Equal(expected, parsed) {
+		t.Errorf("\nexpected %q\nreturned %q", expected, parsed)
 	}
 }
 
