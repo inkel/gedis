@@ -6,7 +6,7 @@ import (
 )
 
 func Test_readNumber(t *testing.T) {
-	var n int
+	var n int64
 	var err error
 
 	a := Asserter{t, 1}

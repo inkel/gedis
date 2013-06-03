@@ -53,8 +53,8 @@ func writeBulk(bulk string) []byte {
 }
 
 // Writes a number in the Redis protocol format
-func writeInt(n int) []byte {
-	return []byte(":" + strconv.Itoa(n) + "\r\n")
+func writeInt(n int64) []byte {
+	return []byte(":" + strconv.FormatInt(n, 10) + "\r\n")
 }
 
 // Writes an error in the Redis protocol format
@@ -82,6 +82,8 @@ func writeMultiBulk(args ...interface{}) []byte {
 		case string:
 			bs = writeBulk(arg)
 		case int:
+			bs = writeInt(int64(arg))
+		case int64:
 			bs = writeInt(arg)
 		case error:
 			bs = writeError(arg)

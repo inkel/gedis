@@ -29,8 +29,8 @@ func (a *Asserter) StringEq(expected string, actual interface{}) {
 	}
 }
 
-func (a *Asserter) IntegerEq(expected int, actual interface{}) {
-	if value, ok := actual.(int); ok {
+func (a *Asserter) IntegerEq(expected int64, actual interface{}) {
+	if value, ok := actual.(int64); ok {
 		if expected != value {
 			a.logf("\nexpected %#v\nreturned %#v", expected, value)
 			a.t.FailNow()
