@@ -83,7 +83,7 @@ func readLine(r io.Reader) (bs []byte, err error) {
 	return bs[:l], err
 }
 
-func ReadBulk(r io.Reader) (bs []byte, err error) {
+func readBulk(r Reader) (bs []byte, err error) {
 	num_bytes, err := readNumber(r)
 	if err != nil {
 		return
@@ -107,6 +107,77 @@ func ReadBulk(r io.Reader) (bs []byte, err error) {
 	// Must read following two bytes for \r\n
 	crlf := make([]byte, 2)
 	r.Read(crlf)
+
+	return
+}
+
+func Read(r Reader) (ret interface{}, err error) {
+	kind := make([]byte, 1)
+
+	_, err = r.Read(kind)
+	if err != nil {
+		return
+	}
+
+	switch kind[0] {
+	case '+':
+		ret, err = readLine(r)
+		if err == nil {
+			if bs, ok := ret.([]byte); ok {
+				return string(bs), nil
+			} else {
+				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
+			}
+		} else {
+			return nil, err
+		}
+	case '-':
+		ret, err = readLine(r)
+
+		if err == nil {
+			if bs, ok := ret.([]byte); ok {
+				err = fmt.Errorf(string(bs))
+			} else {
+				err = fmt.Errorf("Cannot convert to []byte: %#v", ret)
+			}
+			ret = nil
+		}
+	case ':':
+		ret, err = readNumber(r)
+	case '$':
+		ret, err = readBulk(r)
+		if err == nil {
+			if bs, ok := ret.([]byte); ok {
+				return string(bs), nil
+			} else {
+				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
+			}
+		} else {
+			return nil, err
+		}
+	case '*':
+		n, err := readNumber(r)
+		if err != nil {
+			return nil, err
+		}
+
+		if n == -1 {
+			return nil, nil
+		}
+
+		res := make([]interface{}, n)
+
+		for i := 0; i < n; i++ {
+			ret, err := Read(r)
+			if err == nil {
+				res[i] = ret
+			} else {
+				res[i] = err
+			}
+		}
+
+		ret = res
+	}
 
 	return
 }
