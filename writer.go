@@ -48,6 +48,11 @@ func writeBulk(bulk string) []byte {
 	return bytes
 }
 
+// Writes a number in the Redis protocol format
+func writeInt(n int) []byte {
+	return []byte(":" + strconv.Itoa(n) + "\r\n")
+}
+
 // Writes a sequence of strings as a sequence of bytes to be send to a
 // Redis instance, using the Redis Multi-Bulk format.
 func writeMultiBulk(cmd string, args ...string) []byte {

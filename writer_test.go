@@ -42,6 +42,24 @@ func Benchmark_writeMultiBulk(b *testing.B) {
 	}
 }
 
+func Test_writeInt(t *testing.T) {
+	expected := []byte(":1234\r\n")
+	parsed := writeInt(1234)
+
+	if !bytes.Equal(expected, parsed) {
+		t.Errorf("\nexpected %#v\nreturned %#v", expected, parsed)
+		t.FailNow()
+	}
+
+	expected = []byte(":-1234\r\n")
+	parsed = writeInt(-1234)
+
+	if !bytes.Equal(expected, parsed) {
+		t.Errorf("\nexpected %#v\nreturned %#v", expected, parsed)
+		t.FailNow()
+	}
+}
+
 func TestWrite(t *testing.T) {
 	var writer bytes.Buffer
 
