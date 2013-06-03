@@ -74,9 +74,9 @@ func Test_writeError(t *testing.T) {
 func TestWrite(t *testing.T) {
 	var writer bytes.Buffer
 
-	expected := "*1\r\n$4\r\nPING\r\n"
+	expected := "*4\r\n$4\r\nPING\r\n:123\r\n$-1\r\n-ERR unknown\r\n"
 
-	Write(&writer, "PING")
+	Write(&writer, "PING", 123, nil, errors.New("ERR unknown"))
 
 	if res := writer.String(); expected != res {
 		t.Errorf("Write()\nexpected %q\nreturned %q", expected, res)
