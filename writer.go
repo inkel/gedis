@@ -2,6 +2,7 @@ package gedis
 
 import (
 	"bytes"
+	"errors"
 	"strconv"
 )
 
@@ -10,8 +11,11 @@ type Writer interface {
 	Write(p []byte) (n int, err error)
 }
 
-func Write(w Writer, cmd string, args ...string) (n int, err error) {
-	return w.Write(writeMultiBulk(cmd, args...))
+func Write(w Writer, args ...string) (n int, err error) {
+	if len(args) == 0 {
+		return -1, errors.New("Must write at least one argument")
+	}
+	return w.Write(writeMultiBulk(args...))
 }
 
 // Writes a string as a sequence of bytes to be send to a Redis
@@ -60,14 +64,12 @@ func writeError(err error) []byte {
 
 // Writes a sequence of strings as a sequence of bytes to be send to a
 // Redis instance, using the Redis Multi-Bulk format.
-func writeMultiBulk(cmd string, args ...string) []byte {
+func writeMultiBulk(args ...string) []byte {
 	var buffer bytes.Buffer
 
 	buffer.WriteByte('*')
-	buffer.WriteString(strconv.Itoa(1 + len(args)))
+	buffer.WriteString(strconv.Itoa(len(args)))
 	buffer.WriteString("\r\n")
-
-	buffer.Write(writeBulk(cmd))
 
 	for _, elem := range args {
 		buffer.Write(writeBulk(elem))

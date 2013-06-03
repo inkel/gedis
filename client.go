@@ -25,8 +25,8 @@ func (c *Client) Close() error {
 }
 
 // Send a command to the Redis server and receive its reply
-func (c *Client) Send(cmd string, args ...string) (interface{}, error) {
-	_, err := Write(c.conn, cmd, args...)
+func (c *Client) Send(args ...string) (interface{}, error) {
+	_, err := Write(c.conn, args...)
 	if err != nil {
 		return nil, err
 	}

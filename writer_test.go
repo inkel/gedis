@@ -82,3 +82,13 @@ func TestWrite(t *testing.T) {
 		t.Errorf("Write()\nexpected %q\nreturned %q", expected, res)
 	}
 }
+
+func TestWrite_error(t *testing.T) {
+	var writer bytes.Buffer
+
+	a := Asserter{t, 1}
+
+	_, err := Write(&writer)
+	a.NotNil(err)
+	a.StringEq("", writer.String())
+}

@@ -25,7 +25,7 @@ It is possible to send Redis commands to any object that implements
 that interface, i.e. [`net.Conn`](http://golang.org/pkg/net/#Conn),
 by using the following function:
 
- Write(w Writer, cmd string, args ...string) (n int, err error)
+ Write(w Writer, args ...string) (n int, err error)
 
 Reading
 
@@ -42,57 +42,58 @@ that interface, i.e. net.Conn, by using the following function:
 
 API usage example
 
- package main
+    package main
 
- import (
- 	"fmt"
- 	"github.com/inkel/gedis"
- 	"net"
- )
+    import (
+    	"fmt"
+    	"github.com/inkel/gedis"
+    	"net"
+    )
 
- func main() {
- 	c, err := net.Dial("tcp", "localhost:6379")
- 	if err != nil {
- 		panic(err)
- 	}
- 	defer c.Close()
+    func main() {
+    	c, err := net.Dial("tcp", "localhost:6379")
+    	if err != nil {
+    		panic(err)
+    	}
+    	defer c.Close()
 
- 	f := func(cmd string, args ...string) {
- 		fmt.Printf("> %s", cmd)
- 		for _, arg := range args {
- 			fmt.Printf(" %q", arg)
- 		}
- 		fmt.Println()
+    	f := func(args ...string) {
+    		fmt.Printf("> %s", args[0])
+    		for _, arg := range args[1:] {
+    			fmt.Printf(" %q", arg)
+    		}
+    		fmt.Println()
 
- 		// Send to command to Redis server
- 		_, err := gedis.Write(c, cmd, args...)
- 		if err != nil {
- 			panic(err)
- 		}
+    		// Send to command to Redis server
+    		_, err := gedis.Write(c, args...)
+    		if err != nil {
+    			panic(err)
+    		}
 
- 		// Read the reply from the server
- 		res, err := gedis.Read(c)
- 		if err != nil {
- 			panic(err)
- 		}
- 		fmt.Printf("< %#v\n\n", res)
- 	}
+    		// Read the reply from the server
+    		res, err := gedis.Read(c)
+    		if err != nil {
+    			panic(err)
+    		}
+    		fmt.Printf("< %#v\n\n", res)
+    	}
 
- 	f("PING")
+    	f("PING")
 
- 	f("SET", "lorem", "ipsum")
+    	f("SET", "lorem", "ipsum")
 
- 	f("INCR", "counter")
+    	f("INCR", "counter")
 
- 	f("HMSET", "hash", "field1", "lorem", "field2", "ipsum")
+    	f("HMSET", "hash", "field1", "lorem", "field2", "ipsum")
 
- 	f("HGETALL", "hash")
+    	f("HGETALL", "hash")
 
- 	f("MULTI")
- 	f("GET", "counter")
- 	f("GET", "nonexisting")
- 	f("EXEC")
- }
+    	f("MULTI")
+    	f("GET", "counter")
+    	f("GET", "nonexisting")
+    	f("EXEC")
+    }
+
 
 Client
 
@@ -106,51 +107,52 @@ in every call, `gedis` defines the following `Client` object:
 
 Client usage example
 
- package main
+    package main
 
- import (
- 	"fmt"
- 	"github.com/inkel/gedis"
- )
+    import (
+    	"fmt"
+    	"github.com/inkel/gedis"
+    )
 
- func main() {
- 	c, err := gedis.Dial("tcp", "localhost:6379")
- 	if err != nil {
- 		panic(err)
- 	}
- 	defer c.Close()
+    func main() {
+    	c, err := gedis.Dial("tcp", "localhost:6379")
+    	if err != nil {
+    		panic(err)
+    	}
+    	defer c.Close()
 
- 	f := func(cmd string, args ...string) {
- 		fmt.Printf("> %s", cmd)
- 		for _, arg := range args {
- 			fmt.Printf(" %q", arg)
- 		}
- 		fmt.Println()
+    	f := func(args ...string) {
+    		fmt.Printf("> %s", args[0])
+    		for _, arg := range args[1:] {
+    			fmt.Printf(" %q", arg)
+    		}
+    		fmt.Println()
 
- 		// Send to command to Redis server
- 		res, err := c.Send(cmd, args...)
- 		if err != nil {
- 			panic(err)
- 		}
+    		// Send to command to Redis server
+    		res, err := c.Send(args...)
+    		if err != nil {
+    			panic(err)
+    		}
 
- 		fmt.Printf("< %#v\n\n", res)
- 	}
+    		fmt.Printf("< %#v\n\n", res)
+    	}
 
- 	f("PING")
+    	f("PING")
 
- 	f("SET", "lorem", "ipsum")
+    	f("SET", "lorem", "ipsum")
 
- 	f("INCR", "counter")
+    	f("INCR", "counter")
 
- 	f("HMSET", "hash", "field1", "lorem", "field2", "ipsum")
+    	f("HMSET", "hash", "field1", "lorem", "field2", "ipsum")
 
- 	f("HGETALL", "hash")
+    	f("HGETALL", "hash")
 
- 	f("MULTI")
- 	f("GET", "counter")
- 	f("GET", "nonexisting")
- 	f("EXEC")
- }
+    	f("MULTI")
+    	f("GET", "counter")
+    	f("GET", "nonexisting")
+    	f("EXEC")
+    }
+
 
 Why
 

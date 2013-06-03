@@ -21,7 +21,7 @@ type Writer interface {
 It is possible to send Redis commands to any object that implements that interface, i.e. [`net.Conn`](http://golang.org/pkg/net/#Conn), by using the following function:
 
 ```go
-Write(w Writer, cmd string, args ...string) (n int, err error)
+Write(w Writer, args ...string) (n int, err error)
 ```
 
 ### Reading
