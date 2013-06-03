@@ -96,3 +96,90 @@ func Benchmark_readBulk(b *testing.B) {
 		readBulk(reader)
 	}
 }
+
+func TestRead_status(t *testing.T) {
+	res, err := Read(strings.NewReader("+OK\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "OK", res)
+}
+
+func TestRead_error(t *testing.T) {
+	res, err := Read(strings.NewReader("-ERR unknown\r\n"))
+
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+	}
+}
+
+func TestRead_integer(t *testing.T) {
+	res, err := Read(strings.NewReader(":1234\r\n"))
+	assertNotError(t, 1, err)
+	assertIntegerEq(t, 1, 1234, res)
+
+	res, err = Read(strings.NewReader(":-1234\r\n"))
+	assertNotError(t, 1, err)
+	assertIntegerEq(t, 1, -1234, res)
+
+	res, err = Read(strings.NewReader(":lorem\r\n"))
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+	}
+}
+
+func TestRead_bulk(t *testing.T) {
+	var res interface{}
+	var err error
+
+	res, err = Read(strings.NewReader("$5\r\nlorem\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem", res)
+
+	res, err = Read(strings.NewReader("$12\r\nlorem\r\nipsum\r\n"))
+	assertNotError(t, 1, err)
+	assertStringEq(t, 1, "lorem\r\nipsum", res)
+
+	res, err = Read(strings.NewReader("MUST FAIL"))
+	if err == nil {
+		t.Errorf("Error expected, returned: %#v", res)
+		t.FailNow()
+	}
+
+	res, err = Read(strings.NewReader("$-1\r\n"))
+	assertNotError(t, 1, err)
+	if res != nil {
+		t.Errorf("nil expected, returned: %#v", res)
+	}
+}
+
+func TestRead_multiBulk(t *testing.T) {
+	input := "*4\r\n$5\r\nlorem\r\n$-1\r\n*2\r\n$5\r\nipsum\r\n$5\r\ndolor\r\n:-1234\r\n"
+	reader := strings.NewReader(input)
+
+	res, err := Read(reader)
+
+	assertNotError(t, 1, err)
+
+	data, ok := res.([]interface{})
+
+	if !ok {
+		t.Errorf("Read() can't convert multi-bulk to []interface{}: %#v", res)
+		t.FailNow()
+	}
+
+	assertStringEq(t, 1, "lorem", data[0])
+
+	if data[1] != nil {
+		t.Errorf("nil expected, got: %#v", data[1])
+		t.FailNow()
+	}
+
+	if bulks, ok := data[2].([]interface{}); ok {
+		assertStringEq(t, 1, "ipsum", bulks[0])
+		assertStringEq(t, 1, "dolor", bulks[1])
+	} else {
+		t.Errorf("can't convert to []interface{}: %#v", data[2])
+		t.FailNow()
+	}
+
+	assertIntegerEq(t, 1, -1234, data[3])
+}
