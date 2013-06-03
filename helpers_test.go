@@ -1,42 +1,43 @@
 package gedis
 
 import (
-	"testing"
+	"fmt"
+	"path"
 	"runtime"
+	"testing"
 )
 
-func assertStringEq(t *testing.T, skip int, expected string, actual interface{}) {
-	_, file, ln, _ := runtime.Caller(skip)
+func e(t *testing.T, skip int, format string, args ...interface{}) {
+	_, file, ln, _ := runtime.Caller(skip + 1)
+	t.Errorf("\r\t%s:%d: %s", path.Base(file), ln, fmt.Sprintf(format, args...))
+}
 
+func assertStringEq(t *testing.T, skip int, expected string, actual interface{}) {
 	if value, ok := actual.(string); ok {
 		if expected != value {
-			t.Errorf("\r%s:%d: Expected %q\nReturned %q", file, ln, expected, value)
+			e(t, skip, "assertStringEq()\nExpected %q\rReturned %q", expected, value)
 			t.FailNow()
 		}
 	} else {
-		t.Errorf("\r%s:%d: Cannot convert to string: %#v", file, ln, actual)
+		e(t, skip, "assertStringEq(): Cannot convert to string: %#v\n", actual)
 		t.FailNow()
 	}
 }
 
 func assertIntegerEq(t *testing.T, skip int, expected int, actual interface{}) {
-	_, file, ln, _ := runtime.Caller(skip)
-
 	if value, ok := actual.(int); ok {
 		if expected != value {
-			t.Errorf("\r%s:%d: Expected %q\nReturned %q", file, ln, expected, value)
+			e(t, skip, "assertIntegerEq()\nExpected %#v\nReturned %#v", expected, value)
 			t.FailNow()
 		}
 	} else {
-		t.Errorf("\r%s:d: Cannot convert to int: %#v", file, ln, actual)
+		e(t, skip, "assertIntegerEq(): Cannot convert to int: %#v", actual)
 		t.FailNow()
 	}
 }
 
 func assertNotError(t *testing.T, skip int, err error) {
 	if err != nil {
-		_, file, ln, _ := runtime.Caller(skip)
-
-		t.Errorf("\r%s:%d: Returned unexpected error: %v", file, ln, err)
+		e(t, skip, "assertNotError(): Returned unexpected error: %v", err)
 	}
 }
