@@ -8,19 +8,9 @@ import (
 )
 
 func pass_readNumber(t *testing.T, line string, expected int) {
-	_, file, ln, _ := runtime.Caller(1)
-
 	n, err := readNumber(strings.NewReader(line))
-
-	if err != nil {
-		t.Logf("%s:%d: readNumber(%q) returned an error: %#v", file, ln, line, err)
-		t.FailNow()
-	}
-
-	if n != expected {
-		t.Logf("%s:%d: readNumber(%q) returned %d, expected %d", file, ln, line, n, expected)
-		t.FailNow()
-	}
+	assertNotError(t, 2, err)
+	assertIntegerEq(t, 2, expected, n)
 }
 
 func fail_readNumber(t *testing.T, line string) {
