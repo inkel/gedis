@@ -7,45 +7,50 @@ import (
 	"testing"
 )
 
-func e(t *testing.T, skip int, format string, args ...interface{}) {
-	_, file, ln, _ := runtime.Caller(skip + 1)
-	t.Errorf("\r\t%s:%d: %s", path.Base(file), ln, fmt.Sprintf(format, args...))
+type Asserter struct {
+	t    *testing.T
+	skip int
 }
 
-func assertStringEq(t *testing.T, skip int, expected string, actual interface{}) {
+func (a *Asserter) logf(format string, args ...interface{}) {
+	_, file, ln, _ := runtime.Caller(a.skip + 1)
+	a.t.Errorf("\r\t%s:%d: %s", path.Base(file), ln, fmt.Sprintf(format, args...))
+}
+
+func (a *Asserter) StringEq(expected string, actual interface{}) {
 	if value, ok := actual.(string); ok {
 		if expected != value {
-			e(t, skip, "assertStringEq()\nExpected %q\rReturned %q", expected, value)
-			t.FailNow()
+			a.logf("\nexpected %q\nreturned %q", expected, value)
+			a.t.FailNow()
 		}
 	} else {
-		e(t, skip, "assertStringEq(): Cannot convert to string: %#v\n", actual)
-		t.FailNow()
+		a.logf("cannot convert to string: %#v\n", actual)
+		a.t.FailNow()
 	}
 }
 
-func assertIntegerEq(t *testing.T, skip int, expected int, actual interface{}) {
+func (a *Asserter) IntegerEq(expected int, actual interface{}) {
 	if value, ok := actual.(int); ok {
 		if expected != value {
-			e(t, skip, "assertIntegerEq()\nExpected %#v\nReturned %#v", expected, value)
-			t.FailNow()
+			a.logf("\nexpected %#v\nreturned %#v", expected, value)
+			a.t.FailNow()
 		}
 	} else {
-		e(t, skip, "assertIntegerEq(): Cannot convert to int: %#v", actual)
-		t.FailNow()
+		a.logf("cannot convert to int: %#v", actual)
+		a.t.FailNow()
 	}
 }
 
-func assertNil(t *testing.T, skip int, val interface{}) {
+func (a *Asserter) Nil(val interface{}) {
 	if val != nil {
-		e(t, skip, "assertNil(): nil expected, got: %v", val)
-		t.FailNow()
+		a.logf("nil expected, got: %v", val)
+		a.t.FailNow()
 	}
 }
 
-func assertNotNil(t *testing.T, skip int, val interface{}) {
+func (a *Asserter) NotNil(val interface{}) {
 	if val == nil {
-		e(t, skip, "got nil when non-nil was expected")
-		t.FailNow()
+		a.logf("got nil when non-nil was expected")
+		a.t.FailNow()
 	}
 }
