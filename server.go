@@ -2,6 +2,7 @@ package gedis
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"strings"
 )
@@ -29,28 +30,34 @@ func (s *Server) Handle(cmd string, handler Handler) {
 }
 
 func (s *Server) process(c net.Conn) {
-	in, err := Read(c)
-	if err != nil {
-		fmt.Printf("Error while reading from client: %v\n", err)
-		return
-	}
+	defer c.Close()
 
-	data := in.([]interface{})
-	cmd := strings.ToUpper(data[0].(string))
-	args := make([]string, len(data)-1)
-
-	for i, arg := range data[1:] {
-		args[i] = fmt.Sprintf("%v", arg)
-	}
-
-	if fn := s.handlers[cmd]; fn != nil {
-		err = fn(c, args)
-
+	for {
+		in, err := Read(c)
 		if err != nil {
-			fmt.Printf("Unexpected error while processing connection: %v\n", err)
+			if err != io.EOF {
+				fmt.Printf("Error while reading from client: %v\n", err)
+			}
+			return
 		}
-	} else {
-		s.Errorf(c, "Unrecognized command '%s'", cmd)
+
+		data := in.([]interface{})
+		cmd := strings.ToUpper(data[0].(string))
+		args := make([]string, len(data)-1)
+
+		for i, arg := range data[1:] {
+			args[i] = fmt.Sprintf("%v", arg)
+		}
+
+		if fn := s.handlers[cmd]; fn != nil {
+			err = fn(c, args)
+
+			if err != nil {
+				fmt.Printf("Unexpected error while processing connection: %v\n", err)
+			}
+		} else {
+			s.Errorf(c, "Unrecognized command '%s'", cmd)
+		}
 	}
 }
 
