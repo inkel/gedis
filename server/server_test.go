@@ -65,3 +65,12 @@ func TestRead_success(t *testing.T) {
 	pass_Read(t, "*2\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n", []byte("lorem"), []byte("ipsum"))
 	pass_Read(t, "*1\r\n$12\r\nlorem\r\nipsum\r\n", []byte("lorem\r\nipsum"))
 }
+
+func Benchmark_Read(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		reader := bytes.NewBufferString("*2\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n")
+		b.StartTimer()
+		Read(reader)
+	}
+}
