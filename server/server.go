@@ -29,7 +29,7 @@ using the Redis protocol
 Redis protocol: http://redis.io/topics/protocol
 
 As an example, the following implements a very simple Redis server
-that only respond to the PING command:
+that only responds to the PING command:
 
     package main
 
