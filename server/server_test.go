@@ -39,6 +39,7 @@ func TestRead_errors(t *testing.T) {
 	fail_Read(t, "*1\r\n$b\r\nlorem\r\n")
 	fail_Read(t, "*1\r\n$5\r\nlorem\r\n$-1\r\n")
 	fail_Read(t, "*2\r\n$5\r\nlorem\r\n:1234\r\n")
+	fail_Read(t, "*1\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n")
 }
 
 func pass_Read(t *testing.T, input string, expected ...[]byte) {
