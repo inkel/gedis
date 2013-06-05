@@ -2,12 +2,49 @@ package gedis
 
 import (
 	"fmt"
+	"github.com/inkel/gedis"
 	"io"
 	"net"
 	"strings"
 )
 
-type Handler func(c net.Conn, args []string) error
+// Holds pointers to the current Server and client net.Conn
+type Client struct {
+	server *Server
+	conn   *net.Conn
+}
+
+func (c *Client) Close() {
+	conn := *c.conn
+	conn.Close()
+}
+
+// Read from the client, parsing the input with the Redis protocol
+func (c *Client) Read() (interface{}, error) {
+	return gedis.Read(*c.conn)
+}
+
+//
+func (c *Client) Write(bytes []byte) (int, error) {
+	conn := *c.conn
+	return conn.Write(bytes)
+}
+
+// Sends an error to the client
+func (c *Client) Error(err error) (int, error) {
+	return c.Write(gedis.WriteError(err))
+}
+
+// Sends a string formatted as an error to the client
+func (c *Client) Errorf(format string, args ...interface{}) (int, error) {
+	return c.Error(fmt.Errorf(format, args...))
+}
+
+func (c *Client) Status(status string) (int, error) {
+	return c.Write([]byte("+" + status + "\r\n"))
+}
+
+type Handler func(c *Client, args []string) error
 
 type Server struct {
 	ln       net.Listener
@@ -29,11 +66,11 @@ func (s *Server) Handle(cmd string, handler Handler) {
 	s.handlers[cmd] = handler
 }
 
-func (s *Server) process(c net.Conn) {
+func (s *Server) process(c *Client) {
 	defer c.Close()
 
 	for {
-		in, err := Read(c)
+		in, err := c.Read()
 		if err != nil {
 			if err != io.EOF {
 				fmt.Printf("Error while reading from client: %v\n", err)
@@ -56,42 +93,19 @@ func (s *Server) process(c net.Conn) {
 				fmt.Printf("Unexpected error while processing connection: %v\n", err)
 			}
 		} else {
-			s.Errorf(c, "Unrecognized command '%s'", cmd)
+			c.Errorf("Unrecognized command '%s'", cmd)
 		}
 	}
 }
 
 func (s *Server) Loop() {
 	for {
-		client, err := s.ln.Accept()
+		c, err := s.ln.Accept()
 		if err != nil {
 			fmt.Printf("Error while accepting a connection: %v\n", err)
 			continue
 		}
+		client := &Client{s, &c}
 		go s.process(client)
 	}
-}
-
-func (s *Server) Error(c net.Conn, err error) {
-	c.Write(writeError(err))
-}
-
-func (s *Server) Errorf(c net.Conn, format string, args ...interface{}) {
-	s.Error(c, fmt.Errorf(format, args...))
-}
-
-func (s *Server) Status(c net.Conn, status string) {
-	c.Write([]byte("+" + status + "\r\n"))
-}
-
-func (s *Server) Bulk(c net.Conn, bulk string) {
-	c.Write(writeBulk(bulk))
-}
-
-func (s *Server) Nil(c net.Conn) {
-	c.Write([]byte("$-1\r\n"))
-}
-
-func (s *Server) Int(c net.Conn, n int64) {
-	c.Write(writeInt(n))
 }
