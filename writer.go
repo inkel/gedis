@@ -59,7 +59,7 @@ func WriteInt(n int64) []byte {
 
 // Writes an error in the Redis protocol format
 func WriteError(err error) []byte {
-	return []byte("-" + err.Error() + "\r\n")
+	return []byte("-ERR " + err.Error() + "\r\n")
 }
 
 // BUG(inkel): writeMultiBulk can't write multi-bulks inside multi-bulks

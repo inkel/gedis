@@ -62,7 +62,7 @@ func Test_writeInt(t *testing.T) {
 }
 
 func Test_writeError(t *testing.T) {
-	err := errors.New("ERR unknown")
+	err := errors.New("unknown")
 	expected := []byte("-ERR unknown\r\n")
 	parsed := WriteError(err)
 
@@ -76,7 +76,7 @@ func TestWrite(t *testing.T) {
 
 	expected := "*4\r\n$4\r\nPING\r\n:123\r\n$-1\r\n-ERR unknown\r\n"
 
-	Write(&writer, "PING", 123, nil, errors.New("ERR unknown"))
+	Write(&writer, "PING", 123, nil, errors.New("unknown"))
 
 	if res := writer.String(); expected != res {
 		t.Errorf("Write()\nexpected %q\nreturned %q", expected, res)
