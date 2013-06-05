@@ -17,8 +17,12 @@ func fail_Read(t *testing.T, input string) {
 
 	if err == nil {
 		t.Fatalf("\r\t%s:%d: error expected", file, ln)
-	} else {
+	}
+
+	if perr, ok := err.(*ParseError); !ok {
 		t.Logf("\r\t%s:%d: %v", file, ln, err)
+	} else {
+		t.Logf("\r\t%s:%d: %s => %#v", file, ln, perr.Error(), perr.Bytes())
 	}
 }
 

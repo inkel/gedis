@@ -90,6 +90,20 @@ type Reader interface {
 	Read([]byte) (int, error)
 }
 
+// Struct to hold parsing errors
+type ParseError struct {
+	err   string
+	bytes []byte
+}
+
+func (pe *ParseError) Error() string {
+	return pe.err
+}
+
+func (pe *ParseError) Bytes() []byte {
+	return pe.bytes
+}
+
 // Read the length of a bulk or multi-bulk block
 func readLength(buf *bytes.Buffer) (n int64, err error) {
 	sn, err := buf.ReadString('\r')
@@ -102,11 +116,11 @@ func readLength(buf *bytes.Buffer) (n int64, err error) {
 	if err != nil {
 		return -1, err
 	} else if b != '\n' {
-		return -1, fmt.Errorf("Invalid EOL: %q", []byte{'\r', b})
+		return -1, &ParseError{"Invalid EOL", buf.Bytes()}
 	}
 
 	if n < 0 {
-		return -1, fmt.Errorf("Negative length: %d", n)
+		return -1, &ParseError{"Negative length", buf.Bytes()}
 	}
 
 	return strconv.ParseInt(sn[:len(sn)-1], 10, 64)
@@ -120,7 +134,7 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 	if err != nil {
 		return bs, err
 	} else if b != '$' {
-		return bs, fmt.Errorf("Invalid first character: %q", b)
+		return bs, &ParseError{"Invalid first character", buf.Bytes()}
 	}
 
 	n, err := readLength(buf)
@@ -142,7 +156,7 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 	}
 
 	if crlf[0] != '\r' || crlf[1] != '\n' {
-		return bs, fmt.Errorf("Invalid EOL: %q", crlf)
+		return bs, &ParseError{"Invalid EOL", buf.Bytes()}
 	}
 
 	return
@@ -169,7 +183,7 @@ func Read(r Reader) (res [][]byte, err error) {
 	}
 
 	if b != '*' {
-		return res, fmt.Errorf("Invalid first character: %q", b)
+		return res, &ParseError{"Invalid first character", buf.Bytes()}
 	} else {
 		n, err := readLength(buf)
 		if err != nil {
@@ -189,7 +203,7 @@ func Read(r Reader) (res [][]byte, err error) {
 		if err != nil && err != io.EOF {
 			return res, err
 		} else if err != io.EOF {
-			return res, fmt.Errorf("Trailing garbage")
+			return res, &ParseError{"Trailing garbage", buf.Bytes()}
 		}
 	}
 
