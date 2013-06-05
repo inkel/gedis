@@ -92,16 +92,11 @@ type Reader interface {
 
 // Struct to hold parsing errors
 type ParseError struct {
-	err   string
-	bytes []byte
+	err string
 }
 
 func (pe *ParseError) Error() string {
 	return pe.err
-}
-
-func (pe *ParseError) Bytes() []byte {
-	return pe.bytes
 }
 
 // Read the length of a bulk or multi-bulk block
@@ -116,11 +111,11 @@ func readLength(buf *bytes.Buffer) (n int64, err error) {
 	if err != nil {
 		return -1, err
 	} else if b != '\n' {
-		return -1, &ParseError{"Invalid EOL", buf.Bytes()}
+		return -1, &ParseError{"Invalid EOL"}
 	}
 
 	if n < 0 {
-		return -1, &ParseError{"Negative length", buf.Bytes()}
+		return -1, &ParseError{"Negative length"}
 	}
 
 	return strconv.ParseInt(sn[:len(sn)-1], 10, 64)
@@ -134,7 +129,7 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 	if err != nil {
 		return bs, err
 	} else if b != '$' {
-		return bs, &ParseError{"Invalid first character", buf.Bytes()}
+		return bs, &ParseError{"Invalid first character"}
 	}
 
 	n, err := readLength(buf)
@@ -156,7 +151,7 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 	}
 
 	if crlf[0] != '\r' || crlf[1] != '\n' {
-		return bs, &ParseError{"Invalid EOL", buf.Bytes()}
+		return bs, &ParseError{"Invalid EOL"}
 	}
 
 	return
@@ -183,7 +178,7 @@ func Read(r Reader) (res [][]byte, err error) {
 	}
 
 	if b != '*' {
-		return res, &ParseError{"Invalid first character", buf.Bytes()}
+		return res, &ParseError{"Invalid first character"}
 	} else {
 		n, err := readLength(buf)
 		if err != nil {
@@ -203,7 +198,7 @@ func Read(r Reader) (res [][]byte, err error) {
 		if err != nil && err != io.EOF {
 			return res, err
 		} else if err != io.EOF {
-			return res, &ParseError{"Trailing garbage", buf.Bytes()}
+			return res, &ParseError{"Trailing garbage"}
 		}
 	}
 
