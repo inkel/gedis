@@ -1,4 +1,4 @@
-package gedis
+package server
 
 import (
 	"fmt"
