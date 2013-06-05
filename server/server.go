@@ -1,12 +1,118 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/inkel/gedis"
 	"io"
+	"io/ioutil"
 	"net"
+	"strconv"
 	"strings"
 )
+
+type Reader interface {
+	Read([]byte) (int, error)
+}
+
+func readLength(buf *bytes.Buffer) (n int64, err error) {
+	sn, err := buf.ReadString('\r')
+
+	if err != nil {
+		return -1, err
+	}
+
+	b, err := buf.ReadByte()
+	if err != nil {
+		return -1, err
+	} else if b != '\n' {
+		return -1, fmt.Errorf("Invalid EOL: %q", []byte{'\r', b})
+	}
+
+	if n < 0 {
+		return -1, fmt.Errorf("Negative length: %d", n)
+	}
+
+	return strconv.ParseInt(sn[:len(sn)-1], 10, 64)
+}
+
+func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
+	var b byte
+
+	b, err = buf.ReadByte()
+	if err != nil {
+		return bs, err
+	} else if b != '$' {
+		return bs, fmt.Errorf("Invalid first character: %q", b)
+	}
+
+	n, err := readLength(buf)
+	if err != nil {
+		return bs, err
+	}
+
+	bs = make([]byte, n)
+
+	_, err = buf.Read(bs)
+	if err != nil {
+		return bs, err
+	}
+
+	crlf := make([]byte, 2)
+
+	if _, err = buf.Read(crlf); err != nil {
+		return bs, err
+	}
+
+	if crlf[0] != '\r' || crlf[1] != '\n' {
+		return bs, fmt.Errorf("Invalid EOL: %q", crlf)
+	}
+
+	return
+}
+
+func Read(r Reader) (res [][]byte, err error) {
+	var b byte
+
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+
+	buf := bytes.NewBuffer(data)
+
+	b, err = buf.ReadByte()
+	if err != nil {
+		return
+	}
+
+	if b != '*' {
+		return res, fmt.Errorf("Invalid first character: %q", b)
+	} else {
+		n, err := readLength(buf)
+		if err != nil {
+			return res, err
+		}
+
+		res = make([][]byte, n)
+
+		for i := int64(0); i < n; i++ {
+			res[i], err = readBulk(buf)
+			if err != nil {
+				return res, err
+			}
+		}
+
+		b, err = buf.ReadByte()
+		if err != nil && err != io.EOF {
+			return res, err
+		} else if err != io.EOF {
+			return res, fmt.Errorf("Trailing garbage")
+		}
+	}
+
+	return res, err
+}
 
 // Holds pointers to the current Server and client net.Conn
 type Client struct {
