@@ -218,8 +218,8 @@ func (c *Client) Close() {
 }
 
 // Read from the client, parsing the input with the Redis protocol
-func (c *Client) Read() (interface{}, error) {
-	return gedis.Read(*c.conn)
+func (c *Client) Read() ([][]byte, error) {
+	return Read(*c.conn)
 }
 
 // Send a sequence of bytes to a client
@@ -246,7 +246,7 @@ func (c *Client) Status(status string) (int, error) {
 }
 
 // Signature that command handler functions must have
-type Handler func(c *Client, args []string) error
+type Handler func(c *Client, args [][]byte) error
 
 // Structure to hold the necessary information to run a generic Redis
 // server
@@ -289,22 +289,16 @@ func (s *Server) process(c *Client) {
 			return
 		}
 
-		data := in.([]interface{})
-		cmd := strings.ToUpper(data[0].(string))
-		args := make([]string, len(data)-1)
-
-		for i, arg := range data[1:] {
-			args[i] = fmt.Sprintf("%v", arg)
-		}
+		cmd := strings.ToUpper(string(in[0]))
 
 		if fn := s.handlers[cmd]; fn != nil {
-			err = fn(c, args)
+			err = fn(c, in[1:])
 
 			if err != nil {
 				fmt.Printf("Unexpected error while processing connection: %v\n", err)
 			}
 		} else {
-			c.Errorf("Unrecognized command '%s'", cmd)
+			c.Errorf("Unrecognized command '%s'", in[0])
 		}
 	}
 }
