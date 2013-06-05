@@ -16,9 +16,9 @@ func fail_Read(t *testing.T, input string) {
 	_, err := Read(reader)
 
 	if err == nil {
-		t.Fatalf("\r\t%s:%d: error expected", file, ln)
+		t.Fatalf("\r\t%s:%d: FAIL error expected", file, ln)
 	} else {
-		t.Logf("\r\t%s:%d: %v", file, ln, err)
+		t.Logf("\r\t%s:%d: PASS (%v)", file, ln, err)
 	}
 }
 
