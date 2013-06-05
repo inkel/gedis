@@ -15,12 +15,12 @@ func Write(w Writer, args ...interface{}) (n int, err error) {
 	if len(args) == 0 {
 		return -1, fmt.Errorf("Must write at least one argument")
 	}
-	return w.Write(writeMultiBulk(args...))
+	return w.Write(WriteMultiBulk(args...))
 }
 
 // Writes a string as a sequence of bytes to be send to a Redis
 // instance, using the Redis Bulk format.
-func writeBulk(bulk string) []byte {
+func WriteBulk(bulk string) []byte {
 	bulk_len := strconv.Itoa(len(bulk))
 
 	// '$' + len(string(len(bulk))) + "\r\n" + len(bulk) + "\r\n"
@@ -53,12 +53,12 @@ func writeBulk(bulk string) []byte {
 }
 
 // Writes a number in the Redis protocol format
-func writeInt(n int64) []byte {
+func WriteInt(n int64) []byte {
 	return []byte(":" + strconv.FormatInt(n, 10) + "\r\n")
 }
 
 // Writes an error in the Redis protocol format
-func writeError(err error) []byte {
+func WriteError(err error) []byte {
 	return []byte("-" + err.Error() + "\r\n")
 }
 
@@ -66,7 +66,7 @@ func writeError(err error) []byte {
 
 // Writes a sequence of strings as a sequence of bytes to be send to a
 // Redis instance, using the Redis Multi-Bulk format.
-func writeMultiBulk(args ...interface{}) []byte {
+func WriteMultiBulk(args ...interface{}) []byte {
 	var buffer bytes.Buffer
 
 	buffer.WriteByte('*')
@@ -80,13 +80,13 @@ func writeMultiBulk(args ...interface{}) []byte {
 
 		switch arg := arg.(type) {
 		case string:
-			bs = writeBulk(arg)
+			bs = WriteBulk(arg)
 		case int:
-			bs = writeInt(int64(arg))
+			bs = WriteInt(int64(arg))
 		case int64:
-			bs = writeInt(arg)
+			bs = WriteInt(arg)
 		case error:
-			bs = writeError(arg)
+			bs = WriteError(arg)
 		case nil:
 			bs = []byte("$-1\r\n")
 		default:
