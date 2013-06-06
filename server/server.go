@@ -86,15 +86,6 @@ type Reader interface {
 	Read([]byte) (int, error)
 }
 
-// Struct to hold parsing errors
-type ParseError struct {
-	err string
-}
-
-func (pe *ParseError) Error() string {
-	return pe.err
-}
-
 // Read the length of a bulk or multi-bulk block
 func readLength(r Reader) (n int64, err error) {
 	b := make([]byte, 1)
@@ -118,10 +109,10 @@ func readLength(r Reader) (n int64, err error) {
 			if b[0] == '\n' {
 				break
 			} else {
-				return 0, &ParseError{"Invalid EOF"}
+				return 0, gedis.NewParseError("Invalid EOF")
 			}
 		} else {
-			return 0, &ParseError{"Invalid character"}
+			return 0, gedis.NewParseError("Invalid character")
 		}
 
 		_, err = r.Read(b)
@@ -143,7 +134,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 	if err != nil {
 		return bs, err
 	} else if b != '$' {
-		return bs, &ParseError{"Invalid first character"}
+		return bs, gedis.NewParseError("Invalid first character")
 	}
 
 	n, err := readLength(r)
@@ -165,7 +156,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 	}
 
 	if crlf[0] != '\r' || crlf[1] != '\n' {
-		return bs, &ParseError{"Invalid EOL"}
+		return bs, gedis.NewParseError("Invalid EOL")
 	}
 
 	return
@@ -192,7 +183,7 @@ func Read(r Reader) (res [][]byte, err error) {
 	}
 
 	if b != '*' {
-		return res, &ParseError{"Invalid first character"}
+		return res, gedis.NewParseError("Invalid first character")
 	} else {
 		n, err := readLength(r)
 		if err != nil {

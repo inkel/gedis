@@ -173,3 +173,16 @@ Redis uses a very simple text protocol, which is binary safe.
     <arg data>
 */
 package gedis
+
+// Struct to hold parsing errors
+type ParseError struct {
+	err string
+}
+
+func (pe *ParseError) Error() string {
+	return pe.err
+}
+
+func NewParseError(err string) *ParseError {
+	return &ParseError{err}
+}
