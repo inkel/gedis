@@ -84,24 +84,27 @@ func readLine(r Reader) (line string, err error) {
 func readBulk(r Reader) (interface{}, error) {
 	var bs []byte
 
-	num_bytes, err := ReadNumber(r)
+	numBytes, err := ReadNumber(r)
 	if err != nil {
 		return nil, err
 	}
 
-	if num_bytes == -1 {
+	if numBytes == -1 {
 		return nil, nil
 	}
 
-	bs = make([]byte, num_bytes)
-	b := make([]byte, 1)
+	bs = make([]byte, numBytes)
+	n := int64(0)
 
-	for i := int64(0); i < num_bytes; i++ {
-		_, err = r.Read(b)
+	for {
+		bytesRead, err := r.Read(bs)
+		n += int64(bytesRead)
+
 		if err != nil {
 			return nil, err
+		} else if n == numBytes {
+			break
 		}
-		bs[i] = b[0]
 	}
 
 	// Must read following two bytes for \r\n
