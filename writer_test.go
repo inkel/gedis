@@ -71,6 +71,21 @@ func Test_writeError(t *testing.T) {
 	}
 }
 
+func Test_writeStatus(t *testing.T) {
+	expected := []byte("+OK\r\n")
+	parsed := WriteStatus("OK")
+
+	if !bytes.Equal(expected, parsed) {
+		t.Errorf("\nexpected %q\nreturned %q", expected, parsed)
+	}
+}
+
+func Benchmark_WriteStatus(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		WriteStatus("OK")
+	}
+}
+
 func TestWrite(t *testing.T) {
 	var writer bytes.Buffer
 
