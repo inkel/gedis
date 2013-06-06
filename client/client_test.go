@@ -19,10 +19,10 @@ func notErr(t *testing.T, err error) {
 const key = "gedis.client:key"
 
 func TestClient(t *testing.T) {
-	t.Log("NOTE: This test needs a *live* test redis server running on port 26379")
-
 	c, err := Dial("tcp", ":26739")
-	notErr(t, err)
+	if err != nil {
+		t.Skip("NOTE: This test needs a *live* test redis server running on port 26379:", err)
+	}
 
 	var res interface{}
 
