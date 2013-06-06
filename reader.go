@@ -33,10 +33,10 @@ func ReadNumber(r io.Reader) (n int64, err error) {
 			if b[0] == '\n' {
 				break
 			} else {
-				return 0, fmt.Errorf("Invalid character after '\r': %q", b)
+				return 0, NewParseError("Invalid EOF")
 			}
 		} else {
-			return 0, fmt.Errorf("Invalid character: %q", b)
+			return 0, NewParseError("Invalid character")
 		}
 
 		_, err = r.Read(b)
