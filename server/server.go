@@ -53,7 +53,7 @@ that only responds to the PING command:
     	pong := []byte("+PONG\r\n")
     	earg := []byte("-ERR wrong number of arguments for 'ping' command\r\n")
 
-    	s.Handle("PING", func(c *gedis.Client, args []string) error {
+    	s.Handle("PING", func(c *gedis.Client, args [][]byte) error {
     		if len(args) != 0 {
     			c.Write(earg)
     			return nil
@@ -66,191 +66,19 @@ that only responds to the PING command:
 
     	go s.Loop()
 
-    	sig := <-c
+    	<-c
 
-    	fmt.Println("Bye!", sig)
+    	fmt.Println("Bye!")
     }
 */
 package server
 
 import (
 	"fmt"
-	"github.com/inkel/gedis"
 	"io"
 	"net"
 	"strings"
 )
-
-// Interface for reading from Redis clients
-type Reader interface {
-	Read([]byte) (int, error)
-}
-
-// Struct to hold parsing errors
-type ParseError struct {
-	err string
-}
-
-func (pe *ParseError) Error() string {
-	return pe.err
-}
-
-// Read the length of a bulk or multi-bulk block
-func readLength(r Reader) (n int64, err error) {
-	b := make([]byte, 1)
-
-	var sign int64 = 1
-
-	_, err = r.Read(b)
-	if err != nil {
-		return
-	}
-	if b[0] == '-' {
-		sign = -1
-		b[0] = '0'
-	}
-
-	for {
-		if b[0] >= '0' && b[0] <= '9' {
-			n = n*10 + int64(b[0]-'0')
-		} else if b[0] == '\r' {
-			_, err = r.Read(b)
-			if b[0] == '\n' {
-				break
-			} else {
-				return 0, &ParseError{"Invalid EOF"}
-			}
-		} else {
-			return 0, &ParseError{"Invalid character"}
-		}
-
-		_, err = r.Read(b)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return
-		}
-	}
-
-	return sign * n, nil
-}
-
-// Read a bulk as defined in the Redis protocol
-func readBulk(r Reader) (bs []byte, err error) {
-	var b byte
-
-	b, err = readByte(r)
-	if err != nil {
-		return bs, err
-	} else if b != '$' {
-		return bs, &ParseError{"Invalid first character"}
-	}
-
-	n, err := readLength(r)
-	if err != nil {
-		return bs, err
-	}
-
-	bs = make([]byte, n)
-
-	_, err = r.Read(bs)
-	if err != nil {
-		return bs, err
-	}
-
-	crlf := make([]byte, 2)
-
-	if _, err = r.Read(crlf); err != nil {
-		return bs, err
-	}
-
-	if crlf[0] != '\r' || crlf[1] != '\n' {
-		return bs, &ParseError{"Invalid EOL"}
-	}
-
-	return
-}
-
-// Reads the next byte in Reader
-func readByte(r Reader) (byte, error) {
-	b := make([]byte, 1)
-	_, err := r.Read(b)
-	return b[0], err
-}
-
-// Read a multi-bulk request from a Redis client
-//
-// Redis client can only send multi-bulk requests to a Redis
-// server. In truth they can also send an inline request, however that
-// is currently not covered by this implementation
-func Read(r Reader) (res [][]byte, err error) {
-	var b byte
-
-	b, err = readByte(r)
-	if err != nil {
-		return
-	}
-
-	if b != '*' {
-		return res, &ParseError{"Invalid first character"}
-	} else {
-		n, err := readLength(r)
-		if err != nil {
-			return res, err
-		}
-
-		res = make([][]byte, n)
-
-		for i := int64(0); i < n; i++ {
-			res[i], err = readBulk(r)
-			if err != nil {
-				return res, err
-			}
-		}
-	}
-
-	return res, err
-}
-
-// Holds pointers to the current Server and client net.Conn
-type Client struct {
-	server *Server
-	conn   *net.Conn
-}
-
-// Disconnects a client
-func (c *Client) Close() {
-	conn := *c.conn
-	conn.Close()
-}
-
-// Read from the client, parsing the input with the Redis protocol
-func (c *Client) Read() ([][]byte, error) {
-	return Read(*c.conn)
-}
-
-// Send a sequence of bytes to a client
-func (c *Client) Write(bytes []byte) (int, error) {
-	conn := *c.conn
-	return conn.Write(bytes)
-}
-
-// Sends an error to the client, formatted accordingly to the Redis
-// protocol
-func (c *Client) Error(err error) (int, error) {
-	return c.Write(gedis.WriteError(err))
-}
-
-// Sends a string formatted as an error to the client
-func (c *Client) Errorf(format string, args ...interface{}) (int, error) {
-	return c.Error(fmt.Errorf(format, args...))
-}
-
-// Sends a status response, formatted accordingly to the Redis
-// protocol
-func (c *Client) Status(status string) (int, error) {
-	return c.Write([]byte("+" + status + "\r\n"))
-}
 
 // Signature that command handler functions must have
 type Handler func(c *Client, args [][]byte) error

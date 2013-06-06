@@ -62,6 +62,20 @@ func WriteError(err error) []byte {
 	return []byte("-ERR " + err.Error() + "\r\n")
 }
 
+// Writes a status in the Redis protocol format
+func WriteStatus(status string) []byte {
+	bs := make([]byte, len(status)+3)
+	bs[0] = '+'
+	l := 1
+	for _, r := range status {
+		bs[l] = byte(r)
+		l++
+	}
+	bs[l] = '\r'
+	bs[l+1] = '\n'
+	return bs
+}
+
 // BUG(inkel): writeMultiBulk can't write multi-bulks inside multi-bulks
 
 // Writes a sequence of strings as a sequence of bytes to be send to a
