@@ -53,7 +53,7 @@ that only responds to the PING command:
     	pong := []byte("+PONG\r\n")
     	earg := []byte("-ERR wrong number of arguments for 'ping' command\r\n")
 
-    	s.Handle("PING", func(c *gedis.Client, args []string) error {
+    	s.Handle("PING", func(c *gedis.Client, args [][]byte) error {
     		if len(args) != 0 {
     			c.Write(earg)
     			return nil
@@ -66,9 +66,9 @@ that only responds to the PING command:
 
     	go s.Loop()
 
-    	sig := <-c
+    	<-c
 
-    	fmt.Println("Bye!", sig)
+    	fmt.Println("Bye!")
     }
 */
 package server
@@ -82,6 +82,11 @@ import (
 )
 
 // Read a bulk as defined in the Redis protocol
+//
+// This functon is similar to that of gedis.ReadBulk, however given
+// that a Redis client can only send a multi-bulk requests that only
+// include non-nil bulks of bytes, a simplified version that returns a
+// sequence of bytes is provided.
 func readBulk(r gedis.Reader) (bs []byte, err error) {
 	var b byte
 
@@ -117,7 +122,7 @@ func readBulk(r gedis.Reader) (bs []byte, err error) {
 	return
 }
 
-// Reads the next byte in Reader
+// Helper function to read the next byte in a gedis.Reader
 func readByte(r gedis.Reader) (byte, error) {
 	b := make([]byte, 1)
 	_, err := r.Read(b)
@@ -126,9 +131,13 @@ func readByte(r gedis.Reader) (byte, error) {
 
 // Read a multi-bulk request from a Redis client
 //
-// Redis client can only send multi-bulk requests to a Redis
-// server. In truth they can also send an inline request, however that
-// is currently not covered by this implementation
+// This function is similar in implementation to that of gedis.Read,
+// however a Redis client can only send multi-bulk requests to a Redis
+// server, so a simplified version is implemented for reading Redis
+// commands from clients.
+//
+// In truth they can also send an inline request, however that is
+// currently not covered by this implementation.
 func Read(r gedis.Reader) (res [][]byte, err error) {
 	var b byte
 
