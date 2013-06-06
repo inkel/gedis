@@ -61,6 +61,12 @@ func TestWriteInt(t *testing.T) {
 	}
 }
 
+func BenchmarkWriteInt(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		WriteInt(1234)
+	}
+}
+
 func TestWriteError(t *testing.T) {
 	err := errors.New("unknown")
 	expected := []byte("-ERR unknown\r\n")
@@ -68,6 +74,14 @@ func TestWriteError(t *testing.T) {
 
 	if !bytes.Equal(expected, parsed) {
 		t.Errorf("\nexpected %q\nreturned %q", expected, parsed)
+	}
+}
+
+func BenchmarkWriteError(b *testing.B) {
+	err := errors.New("unknown")
+
+	for i := 0; i < b.N; i++ {
+		WriteError(err)
 	}
 }
 
