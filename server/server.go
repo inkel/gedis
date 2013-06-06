@@ -86,46 +86,6 @@ type Reader interface {
 	Read([]byte) (int, error)
 }
 
-// Read the length of a bulk or multi-bulk block
-func readLength(r Reader) (n int64, err error) {
-	b := make([]byte, 1)
-
-	var sign int64 = 1
-
-	_, err = r.Read(b)
-	if err != nil {
-		return
-	}
-	if b[0] == '-' {
-		sign = -1
-		b[0] = '0'
-	}
-
-	for {
-		if b[0] >= '0' && b[0] <= '9' {
-			n = n*10 + int64(b[0]-'0')
-		} else if b[0] == '\r' {
-			_, err = r.Read(b)
-			if b[0] == '\n' {
-				break
-			} else {
-				return 0, gedis.NewParseError("Invalid EOF")
-			}
-		} else {
-			return 0, gedis.NewParseError("Invalid character")
-		}
-
-		_, err = r.Read(b)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return
-		}
-	}
-
-	return sign * n, nil
-}
-
 // Read a bulk as defined in the Redis protocol
 func readBulk(r Reader) (bs []byte, err error) {
 	var b byte
@@ -137,7 +97,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 		return bs, gedis.NewParseError("Invalid first character")
 	}
 
-	n, err := readLength(r)
+	n, err := gedis.ReadNumber(r)
 	if err != nil {
 		return bs, err
 	}
@@ -185,7 +145,7 @@ func Read(r Reader) (res [][]byte, err error) {
 	if b != '*' {
 		return res, gedis.NewParseError("Invalid first character")
 	} else {
-		n, err := readLength(r)
+		n, err := gedis.ReadNumber(r)
 		if err != nil {
 			return res, err
 		}
