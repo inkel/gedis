@@ -10,7 +10,8 @@ type Reader interface {
 	Read(b []byte) (n int, err error)
 }
 
-func readNumber(r io.Reader) (n int64, err error) {
+// Reads an int64 from the Reader
+func ReadNumber(r io.Reader) (n int64, err error) {
 	b := make([]byte, 1)
 
 	var sign int64 = 1
@@ -88,7 +89,7 @@ func readLine(r io.Reader) (line string, err error) {
 func readBulk(r Reader) (interface{}, error) {
 	var bs []byte
 
-	num_bytes, err := readNumber(r)
+	num_bytes, err := ReadNumber(r)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func Read(r Reader) (ret interface{}, err error) {
 			ret = nil
 		}
 	case ':':
-		ret, err = readNumber(r)
+		ret, err = ReadNumber(r)
 	case '$':
 		ret, err = readBulk(r)
 		if err == nil {
@@ -163,7 +164,7 @@ func Read(r Reader) (ret interface{}, err error) {
 			return nil, err
 		}
 	case '*':
-		n, err := readNumber(r)
+		n, err := ReadNumber(r)
 		if err != nil {
 			return nil, err
 		}
