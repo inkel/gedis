@@ -29,74 +29,65 @@
       </header>
       <section>
         <h1>
-<a name="gedis---a-low-level-interface-for-redis-written-in-go" class="anchor" href="#gedis---a-low-level-interface-for-redis-written-in-go"><span class="octicon octicon-link"></span></a>gedis - a low-level interface for Redis written in Go</h1>
+<a name="gedis---a-low-level-interface-in-go-for-redis" class="anchor" href="#gedis---a-low-level-interface-in-go-for-redis"><span class="octicon octicon-link"></span></a>gedis - a low-level interface in Go for Redis</h1>
 
-<p><code>gedis</code> implements a very low-level interface to read and write using the Redis protocol. It also provides a simple client to talk to a Redis server.</p>
+<p><code>gedis</code> implements a very low-level interface to read and write using the <a href="http://redis.io/">Redis</a> <a href="http://redis.io/topics/protocol">protocol</a>.</p>
 
-<p><strong>This is far from being production ready.</strong></p>
+<p>It also provides a simple client to talk to a Redis server and a generic Redis server, which allows you to implement your own server that understands the Redis protocol.</p>
+
+<p><a href="https://travis-ci.org/inkel/gedis"><img src="https://travis-ci.org/inkel/gedis.png?branch=master" alt="Build Status"></a> <code>master</code> branch status at <a href="https://travis-ci.org/">Travis CI</a></p>
 
 <h2>
-<a name="api" class="anchor" href="#api"><span class="octicon octicon-link"></span></a>API</h2>
+<a name="api-documentation" class="anchor" href="#api-documentation"><span class="octicon octicon-link"></span></a>API documentation</h2>
 
-<p>Gedis currently provides two API functions for writing and reading the <a href="http://redis.io/topics/protocol">Redis protocol</a>. It also defines two simple interfaces: <code>Reader</code> and <code>Writer</code></p>
+<p>gedis API documentation is available at the fabulous <a href="http://godoc.org/">GoDoc</a> website, in the following locations:</p>
 
-<h3>
-<a name="writing" class="anchor" href="#writing"><span class="octicon octicon-link"></span></a>Writing</h3>
+<ul>
+<li>Parser: <a href="http://godoc.org/github.com/inkel/gedis">http://godoc.org/github.com/inkel/gedis</a>
+</li>
+<li>Server: <a href="http://godoc.org/github.com/inkel/gedis/server">http://godoc.org/github.com/inkel/gedis/server</a>
+</li>
+<li>Client: <a href="http://godoc.org/github.com/inkel/gedis/client">http://godoc.org/github.com/inkel/gedis/client</a>
+</li>
+</ul><h2>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
 
-<p>Gedis defines the following <code>Writer</code> interface:</p>
-
-<div class="highlight"><pre><span class="kd">type</span> <span class="nx">Writer</span> <span class="kd">interface</span> <span class="p">{</span>
-    <span class="nx">Write</span><span class="p">(</span><span class="nx">p</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>It is possible to send Redis commands to any object that implements that interface, i.e. <a href="http://golang.org/pkg/net/#Conn"><code>net.Conn</code></a>, by using the following function:</p>
-
-<div class="highlight"><pre><span class="nx">Write</span><span class="p">(</span><span class="nx">w</span> <span class="nx">Writer</span><span class="p">,</span> <span class="nx">args</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
-</pre></div>
+<p>You can find all the examples at <a href="https://github.com/inkel/gedis-examples">https://github.com/inkel/gedis-examples</a></p>
 
 <h3>
-<a name="reading" class="anchor" href="#reading"><span class="octicon octicon-link"></span></a>Reading</h3>
+<a name="parser" class="anchor" href="#parser"><span class="octicon octicon-link"></span></a>Parser</h3>
 
-<p>Gedis defines the following <code>Reader</code> interface:</p>
-
-<div class="highlight"><pre><span class="kd">type</span> <span class="nx">Reader</span> <span class="kd">interface</span> <span class="p">{</span>
-    <span class="nx">Read</span><span class="p">(</span><span class="nx">b</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>It is possible to read Redis replies from any object that implements that interface, i.e. <a href="http://golang.org/pkg/net/#Conn"><code>net.Conn</code></a>, by using the following function:</p>
-
-<div class="highlight"><pre><span class="nx">Read</span><span class="p">(</span><span class="nx">r</span> <span class="nx">Reader</span><span class="p">)</span> <span class="p">(</span><span class="nx">reply</span> <span class="kd">interface</span><span class="p">{},</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
-</pre></div>
-
-<h3>
-<a name="example" class="anchor" href="#example"><span class="octicon octicon-link"></span></a>Example</h3>
+<p>In this example we'll create <a href="http://golang.org/pkg/net/#Conn"><code>net.Conn</code></a> to a Redis server and we'll send commands by using the parser function <a href="http://godoc.org/github.com/inkel/gedis#Write"><code>gedis.Write</code></a>, and then read the server's response by using <a href="http://godoc.org/github.com/inkel/gedis#Read"><code>gedis.Read</code></a>:</p>
 
 <div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
 
 <span class="kn">import</span> <span class="p">(</span>
+    <span class="s">"flag"</span>
     <span class="s">"fmt"</span>
     <span class="s">"github.com/inkel/gedis"</span>
     <span class="s">"net"</span>
 <span class="p">)</span>
 
+<span class="kd">var</span> <span class="nx">server</span> <span class="p">=</span> <span class="nx">flag</span><span class="p">.</span><span class="nx">String</span><span class="p">(</span><span class="s">"s"</span><span class="p">,</span> <span class="s">"localhost:6379"</span><span class="p">,</span> <span class="s">"Address of the Redis server"</span><span class="p">)</span>
+
 <span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="s">"localhost:6379"</span><span class="p">)</span>
+    <span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="o">*</span><span class="nx">server</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
         <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
-    <span class="nx">f</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">cmd</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">args</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">f</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">args</span> <span class="o">...</span><span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
+        <span class="nx">cmd</span> <span class="o">:=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"&gt; %s"</span><span class="p">,</span> <span class="nx">cmd</span><span class="p">)</span>
-        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">arg</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">args</span> <span class="p">{</span>
+        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">arg</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="p">{</span>
             <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">" %q"</span><span class="p">,</span> <span class="nx">arg</span><span class="p">)</span>
         <span class="p">}</span>
         <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">()</span>
 
         <span class="c1">// Send to command to Redis server</span>
-        <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gedis</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">cmd</span><span class="p">,</span> <span class="nx">args</span><span class="o">...</span><span class="p">)</span>
+        <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gedis</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">args</span><span class="o">...</span><span class="p">)</span>
         <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
             <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
         <span class="p">}</span>
@@ -118,60 +109,62 @@
     <span class="nx">f</span><span class="p">(</span><span class="s">"HMSET"</span><span class="p">,</span> <span class="s">"hash"</span><span class="p">,</span> <span class="s">"field1"</span><span class="p">,</span> <span class="s">"lorem"</span><span class="p">,</span> <span class="s">"field2"</span><span class="p">,</span> <span class="s">"ipsum"</span><span class="p">)</span>
 
     <span class="nx">f</span><span class="p">(</span><span class="s">"HGETALL"</span><span class="p">,</span> <span class="s">"hash"</span><span class="p">)</span>
-
-    <span class="nx">f</span><span class="p">(</span><span class="s">"MULTI"</span><span class="p">)</span>
-    <span class="nx">f</span><span class="p">(</span><span class="s">"GET"</span><span class="p">,</span> <span class="s">"counter"</span><span class="p">)</span>
-    <span class="nx">f</span><span class="p">(</span><span class="s">"GET"</span><span class="p">,</span> <span class="s">"nonexisting"</span><span class="p">)</span>
-    <span class="nx">f</span><span class="p">(</span><span class="s">"EXEC"</span><span class="p">)</span>
 <span class="p">}</span>
-
 </pre></div>
 
-<h2>
-<a name="client" class="anchor" href="#client"><span class="octicon octicon-link"></span></a>Client</h2>
+<h4>
+<a name="output" class="anchor" href="#output"><span class="octicon octicon-link"></span></a>Output</h4>
 
-<p>To avoid you the hassle of having to pass the connction parameter in every call, <code>gedis</code> defines the following <code>Client</code> object:</p>
+<pre><code>$ go run ./gedis.go
+&gt; PING
+&lt; "PONG"
 
-<div class="highlight"><pre><span class="kd">type</span> <span class="nx">Client</span> <span class="kd">struct</span> <span class="p">{}</span>
+&gt; SET "lorem" "ipsum"
+&lt; "OK"
 
-<span class="kd">func</span> <span class="nx">Dial</span><span class="p">(</span><span class="nx">network</span><span class="p">,</span> <span class="nx">address</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="nx">c</span> <span class="nx">Client</span><span class="p">,</span> <span class="nx">err</span> <span class="kt">error</span><span class="p">)</span>
+&gt; INCR "counter"
+&lt; 6
 
-<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Client</span><span class="p">)</span> <span class="nx">Close</span><span class="p">()</span> <span class="kt">error</span>
+&gt; HMSET "hash" "field1" "lorem" "field2" "ipsum"
+&lt; "OK"
 
-<span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Client</span><span class="p">)</span> <span class="nx">Send</span><span class="p">(</span><span class="nx">cmd</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">args</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kd">interface</span><span class="p">{},</span> <span class="kt">error</span><span class="p">)</span>
-</pre></div>
+&gt; HGETALL "hash"
+&lt; []interface {}{"field1", "lorem", "field2", "ipsum"}
+</code></pre>
 
 <h3>
-<a name="example-1" class="anchor" href="#example-1"><span class="octicon octicon-link"></span></a>Example</h3>
+<a name="client" class="anchor" href="#client"><span class="octicon octicon-link"></span></a>Client</h3>
+
+<p>You can also use the <a href="http://godoc.org/github.com/inkel/gedis/client"><code>gedis</code> client</a> package to create a <a href="http://godoc.org/github.com/inkel/gedis/client#Client"><code>Client</code></a> object that exposes almost the same API as using a <code>net.Conn</code>. In the future this client might add more features.</p>
 
 <div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
 
 <span class="kn">import</span> <span class="p">(</span>
+    <span class="s">"flag"</span>
     <span class="s">"fmt"</span>
-    <span class="s">"github.com/inkel/gedis"</span>
+    <span class="s">"github.com/inkel/gedis/client"</span>
 <span class="p">)</span>
 
+<span class="kd">var</span> <span class="nx">server</span> <span class="p">=</span> <span class="nx">flag</span><span class="p">.</span><span class="nx">String</span><span class="p">(</span><span class="s">"s"</span><span class="p">,</span> <span class="s">"localhost:6379"</span><span class="p">,</span> <span class="s">"Address of the Redis server"</span><span class="p">)</span>
+
 <span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gedis</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="s">"localhost:6379"</span><span class="p">)</span>
+    <span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="o">*</span><span class="nx">server</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
         <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+        <span class="k">return</span>
     <span class="p">}</span>
     <span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
 
-    <span class="nx">f</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">cmd</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">args</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"&gt; %s"</span><span class="p">,</span> <span class="nx">cmd</span><span class="p">)</span>
-        <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">arg</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">args</span> <span class="p">{</span>
-            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">" %q"</span><span class="p">,</span> <span class="nx">arg</span><span class="p">)</span>
-        <span class="p">}</span>
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">()</span>
+    <span class="nx">f</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">args</span> <span class="o">...</span><span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
+        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"&gt; %v\n"</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span>
 
         <span class="c1">// Send to command to Redis server</span>
-        <span class="nx">res</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Send</span><span class="p">(</span><span class="nx">cmd</span><span class="p">,</span> <span class="nx">args</span><span class="o">...</span><span class="p">)</span>
+        <span class="nx">res</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Send</span><span class="p">(</span><span class="nx">args</span><span class="o">...</span><span class="p">)</span>
         <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
             <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"&lt; %#v\n\n"</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span>
         <span class="p">}</span>
-
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">"&lt; %#v\n\n"</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="nx">f</span><span class="p">(</span><span class="s">"PING"</span><span class="p">)</span>
@@ -191,26 +184,136 @@
 <span class="p">}</span>
 </pre></div>
 
+<h4>
+<a name="output-1" class="anchor" href="#output-1"><span class="octicon octicon-link"></span></a>Output</h4>
+
+<pre><code>$ go run ./client.go
+&gt; [PING]
+&lt; "PONG"
+
+&gt; [SET lorem ipsum]
+&lt; "OK"
+
+&gt; [INCR counter]
+&lt; 7
+
+&gt; [HMSET hash field1 lorem field2 ipsum]
+&lt; "OK"
+
+&gt; [HGETALL hash]
+&lt; []interface {}{"field1", "lorem", "field2", "ipsum"}
+
+&gt; [MULTI]
+&lt; "OK"
+
+&gt; [GET counter]
+&lt; "QUEUED"
+
+&gt; [GET nonexisting]
+&lt; "QUEUED"
+
+&gt; [EXEC]
+&lt; []interface {}{"7", interface {}(nil)}
+</code></pre>
+
+<h3>
+<a name="server" class="anchor" href="#server"><span class="octicon octicon-link"></span></a>Server</h3>
+
+<p>If you want to build a custom server that understands the Redis protocol, you can use the <a href="http://godoc.org/github.com/inkel/gedis/server#Server"><code>Server</code></a> type defined in the <a href="http://godoc.org/github.com/inkel/gedis/server"><code>gedis</code> server</a> namespace.</p>
+
+<p>The following example implements a server that only responds to the <a href="http://redis.io/commands/ping"><code>PING</code></a> command:</p>
+
+<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+    <span class="s">"flag"</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"github.com/inkel/gedis/server"</span>
+    <span class="s">"os"</span>
+    <span class="s">"os/signal"</span>
+<span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">listen</span> <span class="p">=</span> <span class="nx">flag</span><span class="p">.</span><span class="nx">String</span><span class="p">(</span><span class="s">"l"</span><span class="p">,</span> <span class="s">":26379"</span><span class="p">,</span> <span class="s">"Address to listen for connections"</span><span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">c</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Signal</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="nx">signal</span><span class="p">.</span><span class="nx">Notify</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Interrupt</span><span class="p">,</span> <span class="nx">os</span><span class="p">.</span><span class="nx">Kill</span><span class="p">)</span>
+
+    <span class="nx">s</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">server</span><span class="p">.</span><span class="nx">NewServer</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="o">*</span><span class="nx">listen</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">defer</span> <span class="nx">s</span><span class="p">.</span><span class="nx">Close</span><span class="p">()</span>
+
+    <span class="nx">pong</span> <span class="o">:=</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">"+PONG\r\n"</span><span class="p">)</span>
+    <span class="nx">earg</span> <span class="o">:=</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">"-ERR wrong number of arguments for 'ping' command\r\n"</span><span class="p">)</span>
+
+    <span class="nx">s</span><span class="p">.</span><span class="nx">Handle</span><span class="p">(</span><span class="s">"PING"</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">server</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">args</span> <span class="p">[][]</span><span class="kt">byte</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">{</span>
+            <span class="nx">c</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">earg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">nil</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">c</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">pong</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="kc">nil</span>
+    <span class="p">})</span>
+
+    <span class="k">go</span> <span class="nx">s</span><span class="p">.</span><span class="nx">Loop</span><span class="p">()</span>
+
+    <span class="c1">// Wait for interrupt/kill</span>
+    <span class="o">&lt;-</span><span class="nx">c</span>
+
+    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">"Bye!"</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h4>
+
+<pre><code>$ go run ./server.go &amp;
+$ redis-cli -p 26379
+redis 127.0.0.1:26379&gt; ping
+PONG
+redis 127.0.0.1:26379&gt; get inkel
+(error) ERR Unrecognized command 'get'
+redis 127.0.0.1:26379&gt;
+</code></pre>
+
+<p>This generic server performs quite well, though not as fast as the standard C Redis server (which is kind of obvious):</p>
+
+<pre><code>$ redis-benchmark -q -t PING_MBULK -p 26379
+PING_BULK: 36630.04 requests per second
+</code></pre>
+
 <h2>
 <a name="build--test" class="anchor" href="#build--test"><span class="octicon octicon-link"></span></a>Build &amp; test</h2>
 
 <p>In your <code>$GOPATH</code> do the following:</p>
 
 <pre><code>go get github.com/inkel/gedis
+go get github.com/inkel/gedis/client
+go get github.com/inkel/gedis/server
 </code></pre>
 
 <p>Then you can build it by executing:</p>
 
 <pre><code>go build github.com/inkel/gedis
+go build github.com/inkel/gedis/client
+go build github.com/inkel/gedis/server
 </code></pre>
 
 <p>Testing and benchmark:</p>
 
 <pre><code>go test github.com/inkel/gedis
 go test github.com/inkel/gedis -bench=".*"
-</code></pre>
 
-<p>Note that running the benchmarks <strong>will</strong> run the tests beforehand.</p>
+go test github.com/inkel/gedis/client
+go test github.com/inkel/gedis/client -bench=".*"
+
+go test github.com/inkel/gedis/server
+go test github.com/inkel/gedis/server -bench=".*"
+</code></pre>
 
 <h2>
 <a name="references" class="anchor" href="#references"><span class="octicon octicon-link"></span></a>References</h2>
@@ -219,58 +322,6 @@ go test github.com/inkel/gedis -bench=".*"
 <li><a href="http://redis.io/topics/protocol">Redis protocol</a></li>
 <li><a href="http://golang.org/doc/code.html">How to write Go code</a></li>
 </ul><h2>
-<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h2>
-
-<ul>
-<li>Documentation</li>
-<li>Tests
-
-<ul>
-<li><del><code>\r\n</code> in a reply</del></li>
-<li><del>Null elements in Multi-Bulk replies</del></li>
-<li><del>Multi-Bulk inside Multi-Bulk replies</del></li>
-</ul>
-</li>
-<li>Network</li>
-<li>Socket</li>
-<li>Pipeline</li>
-<li><del>Improve Bulk/Multi-Bulk <code>nil</code></del></li>
-</ul><h2>
-<a name="real-world-example" class="anchor" href="#real-world-example"><span class="octicon octicon-link"></span></a>Real-world example</h2>
-
-<p>Here we will implement a simple MONITOR that mimicks the command <code>redis-cli MONITOR</code>:</p>
-
-<div class="highlight"><pre><span class="kn">package</span> <span class="nx">main</span>
-
-<span class="kn">import</span> <span class="p">(</span>
-    <span class="s">"fmt"</span>
-    <span class="s">"github.com/inkel/gedis"</span>
-<span class="p">)</span>
-
-<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">c</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">gedis</span><span class="p">.</span><span class="nx">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="s">":6379"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
-    <span class="p">}</span>
-
-    <span class="nx">res</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Send</span><span class="p">(</span><span class="s">"MONITOR"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
-    <span class="p">}</span>
-
-    <span class="k">for</span> <span class="p">{</span>
-        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span>
-        <span class="nx">res</span><span class="p">,</span> <span class="nx">err</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Read</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-            <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>As you can see, using <code>gedis</code> is very simple!</p>
-
-<h2>
 <a name="why" class="anchor" href="#why"><span class="octicon octicon-link"></span></a>Why</h2>
 
 <p>I wanted to learn Go, so I decided to write a minimal Redis client.</p>
@@ -278,6 +329,30 @@ go test github.com/inkel/gedis -bench=".*"
 <p>Perhaps one day I might decide to do something else with it, but in the mean, the goals are merely academic.</p>
 
 <p>Feel free to comment on the code and send patches if you like.</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<pre><code>Copyright (c) 2013 Leandro López
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+</code></pre>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/inkel">inkel</a></p>
