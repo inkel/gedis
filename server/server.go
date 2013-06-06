@@ -81,13 +81,8 @@ import (
 	"strings"
 )
 
-// Interface for reading from Redis clients
-type Reader interface {
-	Read([]byte) (int, error)
-}
-
 // Read a bulk as defined in the Redis protocol
-func readBulk(r Reader) (bs []byte, err error) {
+func readBulk(r gedis.Reader) (bs []byte, err error) {
 	var b byte
 
 	b, err = readByte(r)
@@ -123,7 +118,7 @@ func readBulk(r Reader) (bs []byte, err error) {
 }
 
 // Reads the next byte in Reader
-func readByte(r Reader) (byte, error) {
+func readByte(r gedis.Reader) (byte, error) {
 	b := make([]byte, 1)
 	_, err := r.Read(b)
 	return b[0], err
@@ -134,7 +129,7 @@ func readByte(r Reader) (byte, error) {
 // Redis client can only send multi-bulk requests to a Redis
 // server. In truth they can also send an inline request, however that
 // is currently not covered by this implementation
-func Read(r Reader) (res [][]byte, err error) {
+func Read(r gedis.Reader) (res [][]byte, err error) {
 	var b byte
 
 	b, err = readByte(r)

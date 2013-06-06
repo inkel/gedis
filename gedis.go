@@ -186,3 +186,8 @@ func (pe *ParseError) Error() string {
 func NewParseError(err string) *ParseError {
 	return &ParseError{err}
 }
+
+// Interface for reading Redis commands
+type Reader interface {
+	Read(b []byte) (n int, err error)
+}

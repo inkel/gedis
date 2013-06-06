@@ -5,13 +5,8 @@ import (
 	"io"
 )
 
-// Interface for reading Redis replies
-type Reader interface {
-	Read(b []byte) (n int, err error)
-}
-
 // Reads an int64 from the Reader
-func ReadNumber(r io.Reader) (n int64, err error) {
+func ReadNumber(r Reader) (n int64, err error) {
 	b := make([]byte, 1)
 
 	var sign int64 = 1
@@ -50,7 +45,7 @@ func ReadNumber(r io.Reader) (n int64, err error) {
 	return sign * n, nil
 }
 
-func readLine(r io.Reader) (line string, err error) {
+func readLine(r Reader) (line string, err error) {
 	bs := make([]byte, 1024)
 	l := 0
 
