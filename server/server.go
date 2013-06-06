@@ -249,7 +249,7 @@ func (c *Client) Errorf(format string, args ...interface{}) (int, error) {
 // Sends a status response, formatted accordingly to the Redis
 // protocol
 func (c *Client) Status(status string) (int, error) {
-	return c.Write([]byte("+" + status + "\r\n"))
+	return c.Write(gedis.WriteStatus(status))
 }
 
 // Signature that command handler functions must have
