@@ -291,7 +291,7 @@ func (s *Server) process(c *Client) {
 		in, err := c.Read()
 		if err != nil {
 			if err != io.EOF {
-				fmt.Printf("Error while reading from client: %v\n", err)
+				c.Error(err)
 			}
 			return
 		}
