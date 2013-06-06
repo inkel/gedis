@@ -70,18 +70,14 @@ that only responds to the PING command:
 
     	fmt.Println("Bye!", sig)
     }
-
 */
 package server
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/inkel/gedis"
 	"io"
-	"io/ioutil"
 	"net"
-	"strconv"
 	"strings"
 )
 
@@ -100,53 +96,71 @@ func (pe *ParseError) Error() string {
 }
 
 // Read the length of a bulk or multi-bulk block
-func readLength(buf *bytes.Buffer) (n int64, err error) {
-	sn, err := buf.ReadString('\r')
+func readLength(r Reader) (n int64, err error) {
+	b := make([]byte, 1)
 
+	var sign int64 = 1
+
+	_, err = r.Read(b)
 	if err != nil {
-		return -1, err
+		return
+	}
+	if b[0] == '-' {
+		sign = -1
+		b[0] = '0'
 	}
 
-	b, err := buf.ReadByte()
-	if err != nil {
-		return -1, err
-	} else if b != '\n' {
-		return -1, &ParseError{"Invalid EOL"}
+	for {
+		if b[0] >= '0' && b[0] <= '9' {
+			n = n*10 + int64(b[0]-'0')
+		} else if b[0] == '\r' {
+			_, err = r.Read(b)
+			if b[0] == '\n' {
+				break
+			} else {
+				return 0, &ParseError{"Invalid EOF"}
+			}
+		} else {
+			return 0, &ParseError{"Invalid character"}
+		}
+
+		_, err = r.Read(b)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return
+		}
 	}
 
-	if n < 0 {
-		return -1, &ParseError{"Negative length"}
-	}
-
-	return strconv.ParseInt(sn[:len(sn)-1], 10, 64)
+	return sign * n, nil
 }
 
 // Read a bulk as defined in the Redis protocol
-func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
+func readBulk(r Reader) (bs []byte, err error) {
 	var b byte
 
-	b, err = buf.ReadByte()
+	b, err = readByte(r)
 	if err != nil {
 		return bs, err
 	} else if b != '$' {
 		return bs, &ParseError{"Invalid first character"}
 	}
 
-	n, err := readLength(buf)
+	n, err := readLength(r)
 	if err != nil {
 		return bs, err
 	}
 
 	bs = make([]byte, n)
 
-	_, err = buf.Read(bs)
+	_, err = r.Read(bs)
 	if err != nil {
 		return bs, err
 	}
 
 	crlf := make([]byte, 2)
 
-	if _, err = buf.Read(crlf); err != nil {
+	if _, err = r.Read(crlf); err != nil {
 		return bs, err
 	}
 
@@ -157,6 +171,13 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 	return
 }
 
+// Reads the next byte in Reader
+func readByte(r Reader) (byte, error) {
+	b := make([]byte, 1)
+	_, err := r.Read(b)
+	return b[0], err
+}
+
 // Read a multi-bulk request from a Redis client
 //
 // Redis client can only send multi-bulk requests to a Redis
@@ -165,14 +186,7 @@ func readBulk(buf *bytes.Buffer) (bs []byte, err error) {
 func Read(r Reader) (res [][]byte, err error) {
 	var b byte
 
-	data, err := ioutil.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	buf := bytes.NewBuffer(data)
-
-	b, err = buf.ReadByte()
+	b, err = readByte(r)
 	if err != nil {
 		return
 	}
@@ -180,7 +194,7 @@ func Read(r Reader) (res [][]byte, err error) {
 	if b != '*' {
 		return res, &ParseError{"Invalid first character"}
 	} else {
-		n, err := readLength(buf)
+		n, err := readLength(r)
 		if err != nil {
 			return res, err
 		}
@@ -188,17 +202,10 @@ func Read(r Reader) (res [][]byte, err error) {
 		res = make([][]byte, n)
 
 		for i := int64(0); i < n; i++ {
-			res[i], err = readBulk(buf)
+			res[i], err = readBulk(r)
 			if err != nil {
 				return res, err
 			}
-		}
-
-		b, err = buf.ReadByte()
-		if err != nil && err != io.EOF {
-			return res, err
-		} else if err != io.EOF {
-			return res, &ParseError{"Trailing garbage"}
 		}
 	}
 

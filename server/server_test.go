@@ -33,9 +33,9 @@ func TestRead_errors(t *testing.T) {
 	fail_Read(t, "*1\r\n$5\r\nlorem")
 	fail_Read(t, "*a\r\n$5\r\nlorem\r\n")
 	fail_Read(t, "*1\r\n$b\r\nlorem\r\n")
-	fail_Read(t, "*1\r\n$5\r\nlorem\r\n$-1\r\n")
+	// fail_Read(t, "*1\r\n$5\r\nlorem\r\n$-1\r\n")
 	fail_Read(t, "*2\r\n$5\r\nlorem\r\n:1234\r\n")
-	fail_Read(t, "*1\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n")
+	// fail_Read(t, "*1\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n")
 }
 
 func pass_Read(t *testing.T, input string, expected ...[]byte) {
@@ -65,6 +65,26 @@ func TestRead_success(t *testing.T) {
 	pass_Read(t, "*1\r\n$5\r\nlorem\r\n", []byte("lorem"))
 	pass_Read(t, "*2\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n", []byte("lorem"), []byte("ipsum"))
 	pass_Read(t, "*1\r\n$12\r\nlorem\r\nipsum\r\n", []byte("lorem\r\nipsum"))
+}
+
+func TestRead(t *testing.T) {
+	reader := bytes.NewBufferString("*1\r\n$5\r\nlorem\r\n$5\r\nipsum\r\n")
+
+	res, err := Read(reader)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !bytes.Equal(res[0], []byte("lorem")) {
+		t.Fatalf("unexpected response: %q", res)
+	}
+
+	res, err = Read(reader)
+
+	if err == nil {
+		t.Fatal("nil when expecting error")
+	}
 }
 
 func Benchmark_Read(b *testing.B) {
