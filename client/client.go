@@ -1,6 +1,7 @@
-package gedis
+package client
 
 import (
+	"github.com/inkel/gedis"
 	"net"
 )
 
@@ -26,7 +27,7 @@ func (c *Client) Close() error {
 
 // Send a command to the Redis server and receive its reply
 func (c *Client) Send(args ...interface{}) (interface{}, error) {
-	_, err := Write(c.conn, args...)
+	_, err := gedis.Write(c.conn, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -37,5 +38,5 @@ func (c *Client) Send(args ...interface{}) (interface{}, error) {
 //
 // This is useful for cases like a monitor
 func (c *Client) Read() (interface{}, error) {
-	return Read(c.conn)
+	return gedis.Read(c.conn)
 }
