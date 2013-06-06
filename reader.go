@@ -5,12 +5,8 @@ import (
 	"io"
 )
 
-// Interface for reading Redis replies
-type Reader interface {
-	Read(b []byte) (n int, err error)
-}
-
-func readNumber(r io.Reader) (n int64, err error) {
+// Reads an int64 from the Reader
+func ReadNumber(r Reader) (n int64, err error) {
 	b := make([]byte, 1)
 
 	var sign int64 = 1
@@ -32,10 +28,10 @@ func readNumber(r io.Reader) (n int64, err error) {
 			if b[0] == '\n' {
 				break
 			} else {
-				return 0, fmt.Errorf("Invalid character after '\r': %q", b)
+				return 0, NewParseError("Invalid EOF")
 			}
 		} else {
-			return 0, fmt.Errorf("Invalid character: %q", b)
+			return 0, NewParseError("Invalid character")
 		}
 
 		_, err = r.Read(b)
@@ -49,7 +45,7 @@ func readNumber(r io.Reader) (n int64, err error) {
 	return sign * n, nil
 }
 
-func readLine(r io.Reader) (line string, err error) {
+func readLine(r Reader) (line string, err error) {
 	bs := make([]byte, 1024)
 	l := 0
 
@@ -88,7 +84,7 @@ func readLine(r io.Reader) (line string, err error) {
 func readBulk(r Reader) (interface{}, error) {
 	var bs []byte
 
-	num_bytes, err := readNumber(r)
+	num_bytes, err := ReadNumber(r)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +143,7 @@ func Read(r Reader) (ret interface{}, err error) {
 			ret = nil
 		}
 	case ':':
-		ret, err = readNumber(r)
+		ret, err = ReadNumber(r)
 	case '$':
 		ret, err = readBulk(r)
 		if err == nil {
@@ -163,7 +159,7 @@ func Read(r Reader) (ret interface{}, err error) {
 			return nil, err
 		}
 	case '*':
-		n, err := readNumber(r)
+		n, err := ReadNumber(r)
 		if err != nil {
 			return nil, err
 		}

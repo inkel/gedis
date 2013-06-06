@@ -1,6 +1,7 @@
 gedis server - Generic Redis server implementation
 
 This package allows to create servers that can talk to clients by
-using the Redis protocol
+using the Redis protocol.
 
-See documentation: http://godoc.org/github.com/inkel/gedis/server
+Server API: http://godoc.org/github.com/inkel/gedis/server
+Parser API: http://godoc.org/github.com/inkel/gedis

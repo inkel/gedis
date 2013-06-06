@@ -5,32 +5,32 @@ import (
 	"testing"
 )
 
-func Test_readNumber(t *testing.T) {
+func TestReadNumber(t *testing.T) {
 	var n int64
 	var err error
 
 	a := Asserter{t, 1}
 
-	n, err = readNumber(strings.NewReader("1234\r\n"))
+	n, err = ReadNumber(strings.NewReader("1234\r\n"))
 	a.Nil(err)
 	a.IntegerEq(1234, n)
 
-	n, err = readNumber(strings.NewReader("-1234\r\n"))
+	n, err = ReadNumber(strings.NewReader("-1234\r\n"))
 	a.Nil(err)
 	a.IntegerEq(-1234, n)
 
-	_, err = readNumber(strings.NewReader("abc\r\n"))
+	_, err = ReadNumber(strings.NewReader("abc\r\n"))
 	a.NotNil(err)
-	_, err = readNumber(strings.NewReader("12ab34\r\n"))
+	_, err = ReadNumber(strings.NewReader("12ab34\r\n"))
 	a.NotNil(err)
 }
 
-func Benchmark_readNumber(b *testing.B) {
+func BenchmarkReadNumber(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		line := strings.NewReader("1234\r\n")
 		b.StartTimer()
-		readNumber(line)
+		ReadNumber(line)
 	}
 }
 

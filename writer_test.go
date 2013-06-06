@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_writeBulk(t *testing.T) {
+func TestWriteBulk(t *testing.T) {
 	expected := []byte("$4\r\nPING\r\n")
 	parsed := WriteBulk("PING")
 
@@ -15,13 +15,13 @@ func Test_writeBulk(t *testing.T) {
 	}
 }
 
-func Benchmark_writeBulk(b *testing.B) {
+func BenchmarkWriteBulk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		WriteBulk("PING")
 	}
 }
 
-func Test_writeMultiBulk(t *testing.T) {
+func TestWriteMultiBulk(t *testing.T) {
 	cmd := "*1\r\n$4\r\nPING\r\n"
 	expected := []byte(cmd)
 
@@ -37,13 +37,13 @@ func Test_writeMultiBulk(t *testing.T) {
 	}
 }
 
-func Benchmark_writeMultiBulk(b *testing.B) {
+func BenchmarkWriteMultiBulk(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		WriteMultiBulk("SET", "lorem", "12345")
 	}
 }
 
-func Test_writeInt(t *testing.T) {
+func TestWriteInt(t *testing.T) {
 	expected := []byte(":1234\r\n")
 	parsed := WriteInt(1234)
 
@@ -61,13 +61,42 @@ func Test_writeInt(t *testing.T) {
 	}
 }
 
-func Test_writeError(t *testing.T) {
+func BenchmarkWriteInt(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		WriteInt(1234)
+	}
+}
+
+func TestWriteError(t *testing.T) {
 	err := errors.New("unknown")
 	expected := []byte("-ERR unknown\r\n")
 	parsed := WriteError(err)
 
 	if !bytes.Equal(expected, parsed) {
 		t.Errorf("\nexpected %q\nreturned %q", expected, parsed)
+	}
+}
+
+func BenchmarkWriteError(b *testing.B) {
+	err := errors.New("unknown")
+
+	for i := 0; i < b.N; i++ {
+		WriteError(err)
+	}
+}
+
+func TestWriteStatus(t *testing.T) {
+	expected := []byte("+OK\r\n")
+	parsed := WriteStatus("OK")
+
+	if !bytes.Equal(expected, parsed) {
+		t.Errorf("\nexpected %q\nreturned %q", expected, parsed)
+	}
+}
+
+func BenchmarkWriteStatus(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		WriteStatus("OK")
 	}
 }
 

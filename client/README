@@ -1,0 +1,7 @@
+gedis client - Redis client implementation
+
+This package allows to create clients that can talk to servers by
+using the Redis protocol.
+
+Client API: http://godoc.org/github.com/inkel/gedis/client
+Parser API: http://godoc.org/github.com/inkel/gedis
