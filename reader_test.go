@@ -81,6 +81,14 @@ func Test_readBulk(t *testing.T) {
 	res, err = readBulk(strings.NewReader("PONG"))
 	a.NotNil(err)
 	a.Nil(res)
+
+	res, err = readBulk(strings.NewReader("6\r\nlorem\r\n"))
+	a.NotNil(err)
+	a.Nil(res)
+
+	res, err = readBulk(strings.NewReader("6\r\nlor\r\n"))
+	a.NotNil(err)
+	a.Nil(res)
 }
 
 func Benchmark_readBulk(b *testing.B) {

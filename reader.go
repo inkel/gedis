@@ -94,22 +94,22 @@ func readBulk(r Reader) (interface{}, error) {
 	}
 
 	bs = make([]byte, numBytes)
-	n := int64(0)
 
-	for {
-		bytesRead, err := r.Read(bs)
-		n += int64(bytesRead)
+	bytesRead, err := r.Read(bs)
 
-		if err != nil {
-			return nil, err
-		} else if n == numBytes {
-			break
-		}
+	if err != nil {
+		return nil, err
+	} else if int64(bytesRead) != numBytes {
+		return nil, NewParseError("Invalid byte count read")
 	}
 
 	// Must read following two bytes for \r\n
 	crlf := make([]byte, 2)
 	r.Read(crlf)
+
+	if crlf[0] != '\r' || crlf[1] != '\n' {
+		return nil, NewParseError("Invalid EOF")
+	}
 
 	return string(bs), nil
 }
