@@ -185,3 +185,75 @@ func TestRead_multiBulk(t *testing.T) {
 
 	a.IntegerEq(-1234, data[3])
 }
+
+func TestRead(t *testing.T) {
+	a := Asserter{t, 1}
+
+	replies := "+OK\r\n" +
+		"-ERR unknown\r\n" +
+		":1234\r\n" +
+		":-1234\r\n" +
+		"$5\r\nlorem\r\n"
+	input := replies + "*7\r\n$-1\r\n" + replies + "*1\r\n$2\r\nOK\r\n"
+	reader := strings.NewReader(input)
+
+	t.Logf("Using %q as input", input)
+
+	var err error
+
+	status, err := Read(reader)
+	a.Nil(err)
+	a.StringEq("OK", status)
+
+	rerr, err := Read(reader)
+	a.NotNil(err)
+	a.Nil(rerr)
+	if err.Error() != "ERR unknown" {
+		t.Errorf("Unexpected: %q", err)
+	}
+
+	n, err := Read(reader)
+	a.Nil(err)
+	a.IntegerEq(1234, n)
+
+	n, err = Read(reader)
+	a.Nil(err)
+	a.IntegerEq(-1234, n)
+
+	bulk, err := Read(reader)
+	a.Nil(err)
+	a.StringEq("lorem", bulk)
+
+	mbulk, err := Read(reader)
+
+	a.Nil(err)
+
+	data, ok := mbulk.([]interface{})
+
+	if !ok {
+		t.Errorf("Can't convert to []interface{}: %#v", mbulk)
+		t.FailNow()
+	}
+
+	a.Nil(data[0])
+
+	a.StringEq("OK", data[1])
+
+	if err, ok = data[2].(error); ok {
+		if err.Error() != "ERR unknown" {
+			t.Errorf("Unexpected: %q", err)
+		}
+	} else {
+		t.Errorf("Can't convert to error: %#v", data[2])
+	}
+
+	a.IntegerEq(1234, data[3])
+	a.IntegerEq(-1234, data[4])
+	a.StringEq("lorem", data[5])
+
+	if bulks, ok := data[6].([]interface{}); ok {
+		a.StringEq("OK", bulks[0])
+	} else {
+		t.Errorf("Can't convert to []interface{}: %#v", data[6])
+	}
+}
