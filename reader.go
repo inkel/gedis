@@ -138,7 +138,7 @@ func Read(r Reader) (ret interface{}, err error) {
 		ret, err = readLine(r)
 
 		if err == nil {
-			if bs, ok := ret.([]byte); ok {
+			if bs, ok := ret.(string); ok {
 				err = fmt.Errorf(string(bs))
 			} else {
 				err = fmt.Errorf("Cannot convert to []byte: %#v", ret)
