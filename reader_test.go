@@ -154,6 +154,72 @@ func TestRead_bulk(t *testing.T) {
 	a.Nil(res)
 }
 
+func TestRead_all(t *testing.T) {
+	a := Asserter{t, 1}
+
+	/* Given a Redis server populated with the following commands
+	 *
+	 *   HSET hash name leandro nick inkel
+	 *   INCR counter
+	 *   SADD set inkel lean
+	 *
+	 * Test that the response of the following MULTI/EXEC block
+	 *
+	 *   MULTI
+	 *   GET nonexisting
+	 *   HGETALL hash
+	 *   INCR counter
+	 *   SMEMBERS set
+	 *   EXEC
+	 *
+	 * Executing this in redis-cli returns the following:
+	 *
+	 *   1) (nil)
+	 *   2) 1) "name"
+	 *      2) "leandro"
+	 *      3) "nick"
+	 *      4) "inkel"
+	 *   3) (integer) 3
+	 *   4) 1) "inkel"
+	 *      2) "lean"
+	 *
+	 */
+	input := "*4\r\n$-1\r\n*4\r\n$4\r\nname\r\n$7\r\nleandro\r\n$4\r\nnick\r\n$5\r\ninkel\r\n:2\r\n*2\r\n$5\r\ninkel\r\n$4\r\nlean\r\n"
+	reader := strings.NewReader(input)
+	res, err := Read(reader)
+
+	a.Nil(err)
+
+	data, ok := res.([]interface{})
+
+	if !ok {
+		t.Fatalf("Can't convert to multi-bulk response: %#v", res)
+	}
+
+	a.Nil(data[0])
+
+	hash, ok := data[1].([]interface{})
+
+	if !ok {
+		t.Fatalf("Can't convert HGETALL response: %#v", data[1])
+	}
+
+	for i, expected := range []string{"name", "leandro", "nick", "inkel"} {
+		a.StringEq(expected, hash[i])
+	}
+
+	a.IntegerEq(2, data[2])
+
+	set, ok := data[3].([]interface{})
+
+	if !ok {
+		t.Fatalf("Can't convert SMEMBERS response: %#v", data[3])
+	}
+
+	a.StringEq("inkel", set[0])
+	a.StringEq("lean", set[1])
+}
+
 func TestRead_multiBulk(t *testing.T) {
 	a := Asserter{t, 1}
 
