@@ -103,9 +103,14 @@ func Benchmark_readBulk(b *testing.B) {
 func TestRead_status(t *testing.T) {
 	a := Asserter{t, 1}
 
-	res, err := Read(strings.NewReader("+OK\r\n"))
+	res, err := Read(strings.NewReader("+PONG"))
 	a.Nil(err)
-	a.StringEq("OK", res)
+
+	if status, ok := res.(Status); ok {
+		a.StringEq("PONG", string(status))
+	} else {
+		t.Errorf("Can't convert to Status: %#v", res)
+	}
 }
 
 func TestRead_error(t *testing.T) {
@@ -269,7 +274,11 @@ func TestRead(t *testing.T) {
 
 	status, err := Read(reader)
 	a.Nil(err)
-	a.StringEq("OK", status)
+	if st, ok := status.(Status); ok {
+		a.StringEq("OK", string(st))
+	} else {
+		t.Errorf("can't convert to Status: %#v", status)
+	}
 
 	rerr, err := Read(reader)
 	a.NotNil(err)
@@ -303,7 +312,11 @@ func TestRead(t *testing.T) {
 
 	a.Nil(data[0])
 
-	a.StringEq("OK", data[1])
+	if st, ok := data[1].(Status); ok {
+		a.StringEq("OK", string(st))
+	} else {
+		t.Errorf("Can't convert to Status: %#v", data[1])
+	}
 
 	if err, ok = data[2].(error); ok {
 		if err.Error() != "ERR unknown" {
