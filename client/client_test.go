@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"github.com/inkel/gedis"
 	"path"
 	"runtime"
 	"testing"
@@ -28,7 +29,7 @@ func TestClient(t *testing.T) {
 
 	res, err = c.Send("SET", key, "lorem\r\nipsum")
 	notErr(t, err)
-	if s, ok := res.(string); !ok || s != "OK" {
+	if s, ok := res.(gedis.Status); !ok || s != "OK" {
 		t.Fatalf("Unexpected: %#v", res)
 	}
 
