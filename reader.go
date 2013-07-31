@@ -127,7 +127,7 @@ func Read(r Reader) (ret interface{}, err error) {
 		ret, err = readLine(r)
 		if err == nil {
 			if bs, ok := ret.(string); ok {
-				return bs, nil
+				return Status(bs), nil
 			} else {
 				return nil, fmt.Errorf("Cannot convert to string: %#v", ret)
 			}

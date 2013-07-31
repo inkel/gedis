@@ -103,9 +103,9 @@ func Benchmark_readBulk(b *testing.B) {
 func TestRead_status(t *testing.T) {
 	a := Asserter{t, 1}
 
-	res, err := Read(strings.NewReader("+OK\r\n"))
+	res, err := Read(strings.NewReader("+PONG\r\n"))
 	a.Nil(err)
-	a.StringEq("OK", res)
+	a.IsStatus(res, "PONG")
 }
 
 func TestRead_error(t *testing.T) {
@@ -269,7 +269,7 @@ func TestRead(t *testing.T) {
 
 	status, err := Read(reader)
 	a.Nil(err)
-	a.StringEq("OK", status)
+	a.IsStatus(status, "OK")
 
 	rerr, err := Read(reader)
 	a.NotNil(err)
@@ -302,8 +302,7 @@ func TestRead(t *testing.T) {
 	}
 
 	a.Nil(data[0])
-
-	a.StringEq("OK", data[1])
+	a.IsStatus(data[1], "OK")
 
 	if err, ok = data[2].(error); ok {
 		if err.Error() != "ERR unknown" {
