@@ -103,7 +103,7 @@ func Benchmark_readBulk(b *testing.B) {
 func TestRead_status(t *testing.T) {
 	a := Asserter{t, 1}
 
-	res, err := Read(strings.NewReader("+PONG"))
+	res, err := Read(strings.NewReader("+PONG\r\n"))
 	a.Nil(err)
 
 	if status, ok := res.(Status); ok {
