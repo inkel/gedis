@@ -191,3 +191,6 @@ func NewParseError(err string) *ParseError {
 type Reader interface {
 	Read(b []byte) (n int, err error)
 }
+
+// Type for status replies
+type Status string
