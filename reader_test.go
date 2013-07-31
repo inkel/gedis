@@ -105,12 +105,7 @@ func TestRead_status(t *testing.T) {
 
 	res, err := Read(strings.NewReader("+PONG\r\n"))
 	a.Nil(err)
-
-	if status, ok := res.(Status); ok {
-		a.StringEq("PONG", string(status))
-	} else {
-		t.Errorf("Can't convert to Status: %#v", res)
-	}
+	a.IsStatus(res, "PONG")
 }
 
 func TestRead_error(t *testing.T) {
@@ -274,11 +269,7 @@ func TestRead(t *testing.T) {
 
 	status, err := Read(reader)
 	a.Nil(err)
-	if st, ok := status.(Status); ok {
-		a.StringEq("OK", string(st))
-	} else {
-		t.Errorf("can't convert to Status: %#v", status)
-	}
+	a.IsStatus(status, "OK")
 
 	rerr, err := Read(reader)
 	a.NotNil(err)
@@ -311,12 +302,7 @@ func TestRead(t *testing.T) {
 	}
 
 	a.Nil(data[0])
-
-	if st, ok := data[1].(Status); ok {
-		a.StringEq("OK", string(st))
-	} else {
-		t.Errorf("Can't convert to Status: %#v", data[1])
-	}
+	a.IsStatus(data[1], "OK")
 
 	if err, ok = data[2].(error); ok {
 		if err.Error() != "ERR unknown" {

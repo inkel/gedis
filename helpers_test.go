@@ -54,3 +54,15 @@ func (a *Asserter) NotNil(val interface{}) {
 		a.t.FailNow()
 	}
 }
+
+func (a *Asserter) IsStatus(val interface{}, expected string) {
+	if status, ok := val.(Status); ok {
+		if string(status) != expected {
+			a.logf("\nexpected %q\nreturned %q", expected, status)
+			a.t.FailNow()
+		}
+	} else {
+		a.logf("expecting Status, got: %#v", val)
+		a.t.FailNow()
+	}
+}
