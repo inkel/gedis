@@ -72,6 +72,15 @@ func readLine(r Reader) (line string, err error) {
 			}
 		}
 
+		if l == cap(bs) {
+			// Increase the buffer by 1.5
+			total := len(bs)
+			newSize := total*3/2 + 1
+			newBs := make([]byte, newSize)
+			copy(newBs, bs)
+			bs = newBs
+		}
+
 		bs[l] = b[0]
 		l++
 	}
